@@ -90,6 +90,33 @@ class SupportBridgeProject(models.Model):
         stale = [p for token, p in existing.items() if token not in seen and p.active]
         for project in stale:
             project.active = False
+            # Kanal yerinde kaldığı için, haber verilmezse kullanıcı buraya
+            # yazmaya devam eder ve mesajlarının gittiğini sanır.
+            project._post_notice(_(
+                "%s has stopped sharing this project. Messages written here "
+                "are no longer delivered. The history stays for reference.",
+                connection.partner_id.name or _('Your vendor')))
+
+    def _post_notice(self, body):
+        """Kanalın içine bilgilendirme notu; 'notification' tipi olduğu için
+        köprüden karşı tarafa geçmez."""
+        self.ensure_one()
+        if self.channel_id:
+            self.channel_id.sudo().message_post(
+                body=body, message_type='notification', subtype_xmlid='mail.mt_note')
+
+    def _warn_not_delivered(self):
+        """Paylaşımı durmuş kanala yazıldığında bir kez uyarır; arka arkaya
+        uyarı yığmamak için son mesaj zaten uyarıysa tekrarlanmaz."""
+        self.ensure_one()
+        if not self.channel_id:
+            return
+        son = self.channel_id.message_ids[:1]
+        if son and son.message_type == 'notification':
+            return
+        self._post_notice(_(
+            "Not delivered — %s is no longer sharing this project with you.",
+            self.connection_id.partner_id.name or _('your vendor')))
 
     def _find_by_token(self, connection, token):
         """Gelen bir olayın hangi projeye ait olduğu. Arama daima bağlantıyla

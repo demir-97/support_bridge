@@ -34,21 +34,21 @@ class ProjectProject(models.Model):
              "helpdesk team's group.",
     )
 
-    @api.model_create_multi
-    def create(self, vals_list):
-        projects = super().create(vals_list)
-        for project in projects:
-            project._sync_support_bridge()
-        return projects
+    support_bridge_shared = fields.Boolean(
+        string='Shared with Customer', readonly=True, copy=False,
+        help="Turns on when you share the project, and stays on until you stop "
+             "sharing. Setting a customer and a team only prepares the project — "
+             "nothing reaches them until you press Share.",
+    )
 
     def write(self, vals):
         res = super().write(vals)
-        # Kanal ancak müşteri ve takım birlikte belliyken kurulabilir; ikisinden
-        # biri sonradan doldurulduğunda da yakalanmalı, o yüzden her ikisi de
-        # tetikleyici. Ad değişikliği alt kanal adına yansır.
-        if {'support_bridge_customer_id', 'support_bridge_team_id',
-                'name', 'partner_id'} & set(vals):
-            for project in self:
+        # Yalnızca zaten paylaşılmış projeler için ad tazelenir. Müşteri veya
+        # takım alanını doldurmak hiçbir şey paylaşmaz; paylaşım açık bir
+        # eylemdir, çünkü bir proje kaydı açmak henüz müşteriye anlatılmaya
+        # hazır olmak demek değildir.
+        if {'name', 'support_bridge_customer_id'} & set(vals):
+            for project in self.filtered('support_bridge_shared'):
                 project._sync_support_bridge()
         return res
 
@@ -110,22 +110,59 @@ class ProjectProject(models.Model):
             ],
         })
 
-    def action_support_bridge_revoke(self):
-        """Jetonu siler: bu projenin sohbeti durur, müşterinin bağlantısı ve
-        diğer projeleri etkilenmez. Kanal ve geçmiş olduğu gibi kalır."""
+    def action_support_bridge_share(self):
+        """Projeyi müşteriyle paylaşır — kanalları açar, jetonu üretir ve
+        listeyi karşı tarafa gönderir. Paylaşım açık bir eylemdir: proje
+        kaydını açmak, onu müşteriye göstermeye hazır olmak demek değildir."""
         for project in self:
-            project.sudo().support_bridge_token = False
+            if not project.support_bridge_customer_id:
+                raise UserError(_(
+                    "Pick the customer this project belongs to before sharing it."))
+            if not project.support_bridge_team_id:
+                raise UserError(_(
+                    "Pick the helpdesk team that will handle this project. The "
+                    "team decides who can see the conversation."))
+            if project.support_bridge_customer_id.active is False:
+                raise UserError(_(
+                    "%s is archived, so they cannot receive anything. Restore "
+                    "the customer first.", project.support_bridge_customer_id.name))
+            project.sudo().support_bridge_shared = True
+            project._sync_support_bridge()
+        return True
+
+    def action_support_bridge_revoke(self):
+        """Paylaşımı durdurur. Kanal ve geçmiş iki tarafta da kalır, ama
+        müşteriye bunun olduğu açıkça söylenir — sessizce kesmek, karşı tarafı
+        mesajlarının gittiği yanılgısında bırakır."""
+        for project in self:
+            if not project.support_bridge_shared:
+                continue
+            project.sudo().write({'support_bridge_token': False,
+                                  'support_bridge_shared': False})
+            project._post_bridge_notice(_(
+                "Sharing stopped. %s can no longer send or receive messages "
+                "here, and they have been told so in their own channel.",
+                project.support_bridge_customer_id.name))
             project.support_bridge_customer_id._enqueue_project_sync()
         return True
 
     def action_support_bridge_regenerate(self):
         for project in self:
-            if not project.support_bridge_customer_id:
-                raise UserError(_(
-                    'Link this project to a Support Bridge customer first.'))
+            if not project.support_bridge_shared:
+                raise UserError(_('Share this project before rotating its token.'))
             project.sudo().support_bridge_token = secrets.token_urlsafe(24)
             project.support_bridge_customer_id._enqueue_project_sync()
         return True
+
+    def _post_bridge_notice(self, body):
+        """Kanalın kendi içine bilgilendirme notu. 'notification' tipinde
+        gönderilir; köprü yalnızca 'comment' ilettiği için karşı tarafa
+        geçmez."""
+        self.ensure_one()
+        channel = self.sudo().support_bridge_channel_id
+        if channel:
+            channel.message_post(body=body, message_type='notification',
+                                 subtype_xmlid='mail.mt_note')
 
     @api.model
     def _find_bridged_by_channel(self, channel_ids):
@@ -139,6 +176,33 @@ class ProjectProject(models.Model):
             ('support_bridge_customer_id', '!=', False),
         ])
         return {p.support_bridge_channel_id.id: p for p in projects}
+
+    @api.model
+    def _find_unshared_by_channel(self, channel_ids):
+        """{kanal id: proje} — kanalı duran ama artık paylaşılmayan projeler."""
+        if not channel_ids:
+            return {}
+        projects = self.sudo().search([
+            ('support_bridge_channel_id', 'in', list(channel_ids)),
+            ('support_bridge_shared', '=', False),
+        ])
+        return {p.support_bridge_channel_id.id: p for p in projects}
+
+    def _warn_not_delivered(self):
+        """Paylaşımı durmuş kanala yazıldığında bir kez uyarır. Aynı uyarıyı
+        her mesajda tekrarlamak kanalı doldurur, o yüzden son mesaj zaten
+        uyarıysa tekrar yazılmaz."""
+        self.ensure_one()
+        channel = self.sudo().support_bridge_channel_id
+        if not channel:
+            return
+        son = channel.message_ids[:1]
+        if son and son.message_type == 'notification':
+            return
+        self._post_bridge_notice(_(
+            "Not delivered — this project is no longer shared with %s. "
+            "Press Share on the project to resume the conversation.",
+            self.support_bridge_customer_id.name or _('the customer')))
 
     @api.model
     def _find_by_bridge_token(self, customer, token):

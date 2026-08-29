@@ -20,9 +20,15 @@ class MailMessage(models.Model):
         # çok projesi olabilir ve her birinin kendi alt kanalı vardır.
         project_by_channel = self.env['project.project']._find_bridged_by_channel(
             channel_messages.mapped('res_id'))
-        if not project_by_channel:
-            return
+        # Paylaşımı durdurulmuş projelerin kanalı yerinde kalır. Oraya yazan
+        # temsilci, mesajının gittiğini sanmamalı.
+        stale_by_channel = self.env['project.project']._find_unshared_by_channel(
+            set(channel_messages.mapped('res_id')) - set(project_by_channel))
         for message in channel_messages:
+            stale = stale_by_channel.get(message.res_id)
+            if stale:
+                stale._warn_not_delivered()
+                continue
             project = project_by_channel.get(message.res_id)
             if not project:
                 continue

@@ -48,11 +48,23 @@ class MailMessage(models.Model):
             ('channel_id', 'in', channel_messages.mapped('res_id')),
             ('connection_id.state', '=', 'connected'),
         ])
-        if not projects:
-            return
         project_by_channel = {p.channel_id.id: p for p in projects}
+        # Arşivlenmiş projelerin kanalı yerinde kalır; oraya yazan kullanıcı
+        # mesajının gittiğini sanmamalı.
+        stale_by_channel = {
+            p.channel_id.id: p
+            for p in self.env['support.bridge.project'].sudo()
+            .with_context(active_test=False).search([
+                ('channel_id', 'in', channel_messages.mapped('res_id')),
+                ('active', '=', False)])}
+        if not project_by_channel and not stale_by_channel:
+            return
         outbox_ids = []
         for message in channel_messages:
+            stale = stale_by_channel.get(message.res_id)
+            if stale:
+                stale._warn_not_delivered()
+                continue
             project = project_by_channel.get(message.res_id)
             if not project:
                 continue

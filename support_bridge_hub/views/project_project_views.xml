@@ -19,26 +19,31 @@
                             <field name="support_bridge_channel_id" readonly="1"
                                    invisible="not support_bridge_channel_id"/>
                         </group>
-                        <group string="Access">
-                            <field name="support_bridge_token" readonly="1"
-                                   password="True"
-                                   invisible="not support_bridge_token"/>
-                            <div colspan="2" invisible="not support_bridge_customer_id">
-                                <button name="action_support_bridge_regenerate"
-                                        type="object" class="btn-secondary"
-                                        string="Regenerate Token"
-                                        confirm="The customer will stop receiving this project's messages until you give them the new token. Continue?"/>
+                        <group string="Sharing">
+                            <field name="support_bridge_shared" widget="boolean_toggle"
+                                   readonly="1"/>
+                            <div colspan="2">
+                                <button name="action_support_bridge_share"
+                                        type="object" class="btn-primary"
+                                        string="Share with Customer"
+                                        invisible="support_bridge_shared"
+                                        confirm="This opens a chat channel for this project on the customer's side and starts delivering messages both ways. Continue?"/>
                                 <button name="action_support_bridge_revoke"
-                                        type="object" class="btn-link text-danger"
-                                        string="Revoke"
-                                        invisible="not support_bridge_token"
-                                        confirm="This project's conversation stops immediately. The customer's other projects and their connection are unaffected. Continue?"/>
+                                        type="object" class="btn-secondary"
+                                        string="Stop Sharing"
+                                        invisible="not support_bridge_shared"
+                                        confirm="Messages stop travelling both ways. Both channels and their history stay, and each side is told that sharing ended. Continue?"/>
+                                <button name="action_support_bridge_regenerate"
+                                        type="object" class="btn-link"
+                                        string="Rotate Token"
+                                        invisible="not support_bridge_shared"
+                                        confirm="Use this if the connection may have been exposed. The customer keeps working without doing anything. Continue?"/>
                             </div>
                         </group>
                     </group>
-                    <div class="text-muted" invisible="support_bridge_customer_id">
-                        Link this project to a connected customer to open a
-                        dedicated chat channel for it on both sides.
+                    <div class="text-muted" invisible="support_bridge_shared">
+                        Pick the customer and the helpdesk team, then press Share.
+                        Nothing reaches the customer until you do.
                     </div>
                 </page>
             </xpath>
