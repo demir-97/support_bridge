@@ -482,3 +482,8 @@ msgstr "Bu adresi kontrol edin"
 #: code:addons/support_bridge_client/models/support_bridge_connection.py:0
 msgid "Use https for this address"
 msgstr "Bu adres için https kullanın"
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_outbox__next_retry
+msgid "Next Retry"
+msgstr "Sonraki Deneme"

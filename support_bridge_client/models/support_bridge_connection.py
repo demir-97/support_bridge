@@ -280,7 +280,11 @@ class SupportBridgeConnection(models.Model):
         oluşturma kancası) sunucuya ulaşılamadığında da yerel olarak
         çalışmaya devam etmelidir.
 
-        (ok, error, hub_message_id) döner."""
+        (ok, error, hub_message_id, status_code) döner. status_code, karşı
+        taraftan bir HTTP yanıtı alınabildiyse onun kodudur, ağa hiç
+        çıkılamadıysa 0'dır. Çağıran hatanın kalıcı olup olmadığını bu sayıya
+        bakarak anlar; hata metni yalnızca kullanıcıya gösterilmek içindir ve
+        biçimi hiçbir mantığın dayanağı değildir."""
         self.ensure_one()
         url = self.hub_url.rstrip('/') + '/support_bridge/inbound'
         try:
@@ -295,13 +299,19 @@ class SupportBridgeConnection(models.Model):
                     'skipped_attachments': skipped_attachments or [],
                 }, timeout=TIMEOUT)
         except requests.exceptions.RequestException as e:
-            return False, str(e), 0
+            return False, str(e), 0, 0
+        status_code = response.status_code
         if not response.ok:
-            return False, 'HTTP %s' % response.status_code, 0
-        data = response.json()
+            return False, 'HTTP %s' % status_code, 0, status_code
+        try:
+            data = response.json()
+        except ValueError:
+            # Araya giren bir proxy 200 ile HTML dönebilir; bu fonksiyon hata
+            # fırlatmamaya söz verdiği için burada da sessizce başarısız olur.
+            return False, 'invalid_json_response', 0, status_code
         if not data.get('ok'):
-            return False, data.get('error') or 'unknown_error', 0
-        return True, False, data.get('hub_message_id') or 0
+            return False, data.get('error') or 'unknown_error', 0, status_code
+        return True, False, data.get('hub_message_id') or 0, status_code
 
     def send_reaction(self, remote_message_id, content, action, author_name=None,
                       author_id=None, author_email=None):
