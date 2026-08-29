@@ -42,7 +42,7 @@
                     </group>
                     <group string="Delivery Mode">
                         <group>
-                            <field name="push_enabled"/>
+                            <field name="push_enabled" widget="boolean_toggle"/>
                             <field name="public_url" placeholder="https://mycompany.odoo.com"
                                    invisible="not push_enabled" required="push_enabled"/>
                         </group>

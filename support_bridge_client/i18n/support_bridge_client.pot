@@ -6,14 +6,32 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0+e-20260630\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-28 12:26+0000\n"
-"PO-Revision-Date: 2026-08-28 12:26+0000\n"
+"POT-Creation-Date: 2026-08-29 12:41+0000\n"
+"PO-Revision-Date: 2026-08-29 12:41+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: \n"
+
+#. module: support_bridge_client
+#. odoo-python
+#: code:addons/support_bridge_client/models/support_bridge_connection.py:0
+msgid ""
+"%s is an internal address, so a vendor outside your network cannot reach it."
+" Replace it with the address you use to open this Odoo from outside, or "
+"untick Publicly Reachable — replies still arrive either way."
+msgstr ""
+
+#. module: support_bridge_client
+#. odoo-python
+#: code:addons/support_bridge_client/models/support_bridge_connection.py:0
+msgid ""
+"%s is not encrypted, so your API key would travel in the clear and "
+"deliveries may be lost to a redirect. Change it to https if your Odoo is "
+"reachable that way."
+msgstr ""
 
 #. module: support_bridge_client
 #: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_connection__api_key
@@ -56,6 +74,12 @@ msgstr ""
 #. module: support_bridge_client
 #: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_outbox__body
 msgid "Body"
+msgstr ""
+
+#. module: support_bridge_client
+#. odoo-python
+#: code:addons/support_bridge_client/models/support_bridge_connection.py:0
+msgid "Check this address"
 msgstr ""
 
 #. module: support_bridge_client
@@ -384,6 +408,12 @@ msgstr ""
 #. odoo-python
 #: code:addons/support_bridge_client/models/support_bridge_connection.py:0
 msgid "Unknown"
+msgstr ""
+
+#. module: support_bridge_client
+#. odoo-python
+#: code:addons/support_bridge_client/models/support_bridge_connection.py:0
+msgid "Use https for this address"
 msgstr ""
 
 #. module: support_bridge_client

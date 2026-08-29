@@ -30,7 +30,7 @@
                     <group>
                         <group string="Connection">
                             <field name="api_key"/>
-                            <field name="active"/>
+                            <field name="active" widget="boolean_toggle"/>
                         </group>
                         <group string="Team">
                             <field name="agent_user_ids" widget="many2many_tags"/>

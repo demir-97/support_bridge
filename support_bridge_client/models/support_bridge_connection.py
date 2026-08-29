@@ -1,6 +1,7 @@
 import base64
 import logging
 import threading
+from urllib.parse import urlparse
 
 import requests
 from markupsafe import Markup
@@ -14,6 +15,21 @@ _logger = logging.getLogger(__name__)
 TIMEOUT = 15
 MAX_ATTACHMENT_BYTES = 20 * 1024 * 1024
 MAX_ATTACHMENTS_PER_MESSAGE = 20
+
+
+def _looks_internal(url):
+    """Hub'ın internet üzerinden ulaşamayacağı adresleri kabaca ayıklar.
+    Yalnızca uyarı üretmek için kullanılır: aynı yerel ağdaki bir hub böyle
+    bir adrese pekâlâ erişebilir, o yüzden bu asla engelleyici olmamalı."""
+    host = (urlparse(url).hostname or '').lower()
+    if host in ('localhost', '::1') or host.endswith('.local'):
+        return True
+    if host.startswith(('127.', '10.', '192.168.', '169.254.', '0.')):
+        return True
+    parts = host.split('.')
+    if len(parts) == 4 and parts[0] == '172' and parts[1].isdigit():
+        return 16 <= int(parts[1]) <= 31
+    return False
 
 
 def _fire_and_forget_post(url, headers, payload, timeout):
@@ -80,6 +96,39 @@ class SupportBridgeConnection(models.Model):
     def _compute_name(self):
         for record in self:
             record.name = record.partner_id.name or record.hub_url or _('New Connection')
+
+    @api.onchange('push_enabled')
+    def _onchange_push_enabled(self):
+        """Kutu işaretlendiğinde adresi Odoo'nun kendi taban URL'i ile doldurur.
+        Alan düzenlenebilir kalır ve dolu bir değer asla ezilmez; amaç elle
+        yazımdaki hata riskini azaltmak — yanlış adres, mesaj içeriğinin ve API
+        anahtarının tanımadığımız bir sunucuya gönderilmesi demektir."""
+        if not self.push_enabled or self.public_url:
+            return
+        base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url') or ''
+        self.public_url = base_url.rstrip('/')
+        if not self.public_url:
+            return
+        if _looks_internal(self.public_url):
+            return {'warning': {
+                'title': _('Check this address'),
+                'message': _(
+                    "%s is an internal address, so a vendor outside your network "
+                    "cannot reach it. Replace it with the address you use to open "
+                    "this Odoo from outside, or untick Publicly Reachable — "
+                    "replies still arrive either way.", self.public_url),
+            }}
+        if self.public_url.startswith('http://'):
+            # TLS'i sonlandıran bir proxy arkasında proxy_mode kapalıysa Odoo
+            # kendi adresini http sanır. Bu adrese yapılan gönderim genelde
+            # https'e yönlendirilir ve yönlendirmede POST düşer.
+            return {'warning': {
+                'title': _('Use https for this address'),
+                'message': _(
+                    "%s is not encrypted, so your API key would travel in the "
+                    "clear and deliveries may be lost to a redirect. Change it "
+                    "to https if your Odoo is reachable that way.", self.public_url),
+            }}
 
     def write(self, vals):
         # Ekip listesi değişmeden önceki hali yakalanır; hangi kullanıcının

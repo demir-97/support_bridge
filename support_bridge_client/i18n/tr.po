@@ -446,3 +446,39 @@ msgstr "https://sirketiniz.odoo.com"
 #: model_terms:ir.ui.view,arch_db:support_bridge_client.view_support_bridge_connection_form
 msgid "https://support.yourvendor.com"
 msgstr "https://destek.tedarikciniz.com"
+
+#. module: support_bridge_client
+#. odoo-python
+#: code:addons/support_bridge_client/models/support_bridge_connection.py:0
+msgid ""
+"%s is an internal address, so a vendor outside your network cannot reach it."
+" Replace it with the address you use to open this Odoo from outside, or "
+"untick Publicly Reachable — replies still arrive either way."
+msgstr ""
+"%s bir iç ağ adresi; ağınızın dışındaki bir tedarikçi buraya ulaşamaz. Bu "
+"Odoo'yu dışarıdan açarken kullandığınız adresle değiştirin ya da Dışarıdan "
+"Erişilebilir işaretini kaldırın — cevaplar her hâlükârda gelmeye devam eder."
+
+#. module: support_bridge_client
+#. odoo-python
+#: code:addons/support_bridge_client/models/support_bridge_connection.py:0
+msgid ""
+"%s is not encrypted, so your API key would travel in the clear and "
+"deliveries may be lost to a redirect. Change it to https if your Odoo is "
+"reachable that way."
+msgstr ""
+"%s şifreli değil; API anahtarınız açık metin olarak iletilir ve gönderimler "
+"yönlendirme sırasında kaybolabilir. Odoo'nuza https ile erişilebiliyorsa "
+"adresi https olarak değiştirin."
+
+#. module: support_bridge_client
+#. odoo-python
+#: code:addons/support_bridge_client/models/support_bridge_connection.py:0
+msgid "Check this address"
+msgstr "Bu adresi kontrol edin"
+
+#. module: support_bridge_client
+#. odoo-python
+#: code:addons/support_bridge_client/models/support_bridge_connection.py:0
+msgid "Use https for this address"
+msgstr "Bu adres için https kullanın"
