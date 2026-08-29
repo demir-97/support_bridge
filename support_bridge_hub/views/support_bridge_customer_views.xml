@@ -19,11 +19,14 @@
         <field name="model">support.bridge.customer</field>
         <field name="arch" type="xml">
             <form>
-                <header>
-                    <button name="action_open_channel" string="Open Channel" type="object"
-                            class="btn-primary" invisible="not channel_id"/>
-                </header>
                 <sheet>
+                    <div class="button_box" name="button_box">
+                        <button name="action_open_projects" type="object"
+                                class="oe_stat_button" icon="fa-comments-o"
+                                invisible="not project_count">
+                            <field name="project_count" widget="statinfo" string="Projects"/>
+                        </button>
+                    </div>
                     <div class="oe_title">
                         <h1><field name="name" placeholder="Customer company name"/></h1>
                     </div>
@@ -39,7 +42,6 @@
                     </group>
                     <group string="Linked Records" invisible="not partner_id">
                         <field name="partner_id" readonly="1"/>
-                        <field name="channel_id" readonly="1"/>
                         <field name="client_public_url" readonly="1"
                                placeholder="Not reachable — relies on their own polling"/>
                     </group>

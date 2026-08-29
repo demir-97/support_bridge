@@ -122,6 +122,19 @@ class ProjectProject(models.Model):
         return True
 
     @api.model
+    def _find_bridged_by_channel(self, channel_ids):
+        """{kanal id: proje} — yalnızca jetonu duran projeler. Jetonu iptal
+        edilmiş bir projenin kanalına yazılan mesaj dışarı çıkmaz."""
+        if not channel_ids:
+            return {}
+        projects = self.sudo().search([
+            ('support_bridge_channel_id', 'in', list(channel_ids)),
+            ('support_bridge_token', '!=', False),
+            ('support_bridge_customer_id', '!=', False),
+        ])
+        return {p.support_bridge_channel_id.id: p for p in projects}
+
+    @api.model
     def _find_by_bridge_token(self, customer, token):
         """Gelen bir olayın hangi projeye ait olduğunu bulur. Arama daima
         müşteriyle sınırlanır: jeton tahmin edilse bile başka bir müşterinin

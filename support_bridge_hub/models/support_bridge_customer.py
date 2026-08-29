@@ -52,12 +52,12 @@ class SupportBridgeCustomer(models.Model):
         help="Auto-created contact representing the customer's company; relayed "
              "messages are attributed to individual contacts nested under it.",
     )
-    channel_id = fields.Many2one(
-        # index: her mail.message oluşturmada bu alan üzerinden arama yapılır.
-        'discuss.channel', string='Support Channel', readonly=True, copy=False, index=True,
-        help="This customer's dedicated Discuss channel, nested under the shared "
-             "Support parent channel.",
+    project_ids = fields.One2many(
+        'project.project', 'support_bridge_customer_id', string='Bridged Projects',
+        help="The projects this customer talks to you about. Each one has its "
+             "own chat channel on both sides and its own revocable token.",
     )
+    project_count = fields.Integer(compute='_compute_project_count')
     agent_user_ids = fields.Many2many(
         'res.users', string='Agents',
         default=lambda self: self.env.user,
@@ -82,7 +82,7 @@ class SupportBridgeCustomer(models.Model):
     def create(self, vals_list):
         records = super().create(vals_list)
         for record in records:
-            record._ensure_partner_and_channel()
+            record._ensure_partner()
         return records
 
     def write(self, vals):
@@ -97,7 +97,9 @@ class SupportBridgeCustomer(models.Model):
                 record._sync_channel_members(previous.get(record.id))
         return res
 
-    def _ensure_partner_and_channel(self):
+    def _ensure_partner(self):
+        """Müşterinin temsil kontağı. Kanal oluşturmaz — sohbet kanalları
+        projelere aittir ve proje köprüye bağlandığında açılır."""
         self.ensure_one()
         if not self.partner_id:
             self.partner_id = self.env['res.partner'].sudo().create({
@@ -105,34 +107,6 @@ class SupportBridgeCustomer(models.Model):
                 'is_company': True,
                 'comment': _('Support Bridge customer persona — do not merge or delete.'),
             })
-        if not self.channel_id:
-            parent_channel = self._get_or_create_parent_channel()
-            self.channel_id = self.env['discuss.channel'].sudo().create({
-                'name': self.name,
-                'channel_type': parent_channel.channel_type,
-                'parent_channel_id': parent_channel.id,
-                'channel_member_ids': [
-                    (0, 0, {'partner_id': user.partner_id.id})
-                    for user in self.agent_user_ids
-                ],
-            })
-
-    def _get_or_create_parent_channel(self):
-        """Her müşterinin kanalının alt kanal olarak bağlandığı tek üst düzey
-        Discuss kanalı. Şirket üzerinde tanımlı olanı kullanır (Ayarlar >
-        Kullanıcılar ve Şirketler > Şirketler > Destek Merkezi); tanımlı
-        değilse ilk ihtiyaç duyulduğunda oluşturup şirkete kaydeder."""
-        company = self.env.company
-        parent = company.support_bridge_parent_channel_id
-        if not parent:
-            parent = self.env['discuss.channel'].sudo().create({
-                'name': _('Support'),
-                # 'group' tipinde erişim yalnızca üyeliktir (kanalın kendisine ya da # üst kanalına).
-                'channel_type': 'group',
-                'channel_member_ids': [(0, 0, {'partner_id': self.env.user.partner_id.id})],
-            })
-            company.sudo().support_bridge_parent_channel_id = parent.id
-        return parent
 
     def _update_remote_name(self, name):
         """Client'tan gelen her /ping isteğinde, client'ın kendi gerçek şirket
@@ -146,8 +120,9 @@ class SupportBridgeCustomer(models.Model):
         self.name = name
         if self.partner_id:
             self.partner_id.sudo().name = name
-        if self.channel_id:
-            self.channel_id.sudo().name = name
+        # Alt kanal adları müşteri adını önek olarak taşır, hepsi tazelenmeli.
+        for project in self.project_ids:
+            project._sync_support_bridge()
 
     def _update_public_url(self, public_url):
         """Her /ping isteğinde çağrılır — müşterinin anlık teslimat adresini
@@ -157,14 +132,30 @@ class SupportBridgeCustomer(models.Model):
         if public_url != self.client_public_url:
             self.client_public_url = public_url
 
-    def _enqueue_event(self, event_type, payload):
+    def _serialize_projects(self):
+        """Müşterinin kendi tarafında alt kanal açması için gereken asgari
+        bilgi. Takım adı da gönderilir çünkü müşteri tarafındaki gruplama
+        buna göre değil bayiye göre yapılsa da, kanal adında görünmesi
+        hangi ekiple konuşulduğunu belli eder."""
+        self.ensure_one()
+        return [{
+            'token': project.support_bridge_token,
+            'name': project.name or '',
+            'team_name': project.support_bridge_team_id.name or '',
+        } for project in self.project_ids.sudo().filtered('support_bridge_token')]
+
+    def _enqueue_event(self, event_type, payload, project):
         """Bu müşteri için bir giden olay kaydeder. Olay kuyruğu, her iki
         teslimat yolunun da okuduğu tek kaynaktır: müşterinin poll cron'u
         kuyruğu olay id'sine göre tarar ve müşteri kendini genel erişilebilir
-        ilan ettiyse aynı olay ona anında iletilir."""
+        ilan ettiyse aynı olay ona anında iletilir.
+
+        Olay daima bir projeye aittir; karşı taraf hangi alt kanala yazacağını
+        yükteki proje jetonundan bulur."""
         self.ensure_one()
         event = self.env['support.bridge.event'].sudo().create({
             'customer_id': self.id,
+            'project_id': project.id,
             'event_type': event_type,
             'payload': payload,
         })
@@ -180,6 +171,10 @@ class SupportBridgeCustomer(models.Model):
         data = dict(event.payload or {})
         data['id'] = event.id
         data['type'] = event.event_type
+        # Jeton olay kaydından değil projeden okunur: iptal edilmiş bir proje
+        # için kuyrukta bekleyen olaylar da böylece teslim edilemez hale gelir.
+        data['project_token'] = event.project_id.sudo().support_bridge_token or ''
+        data['project_name'] = event.project_id.name or ''
         if event.event_type == 'message' and data.get('message_id'):
             message = self.env['mail.message'].sudo().browse(data['message_id']).exists()
             if message:
@@ -228,15 +223,15 @@ class SupportBridgeCustomer(models.Model):
             })
         return result
 
-    def _warn_skipped_attachments(self, skipped):
+    def _warn_skipped_attachments(self, channel, skipped):
         """Gönderene, hangi eklerin karşı tarafa gitmediğini kanalın içinde
         söyler. Sessizce atlamak kullanıcıyı dosyanın ulaştığı yanılgısında
         bırakır. 'notification' tipinde gönderilir; köprü yalnızca 'comment'
         tipini ilettiği için bu uyarı karşı tarafa geçmez."""
         self.ensure_one()
-        if not skipped or not self.channel_id:
+        if not skipped or not channel:
             return
-        self.channel_id.sudo().message_post(
+        channel.sudo().message_post(
             body=_(
                 "Not delivered to %(customer)s — attachments are limited to "
                 "%(size)s MB per file and %(count)s files per message: %(names)s. "
@@ -270,15 +265,19 @@ class SupportBridgeCustomer(models.Model):
             result.append((name, raw))
         return result
 
-    def _apply_client_reaction(self, message_id, content, action, author_name,
+    def _apply_client_reaction(self, project, message_id, content, action, author_name,
                                author_remote_id=None, author_email=None):
-        """Müşteri tarafından iletilen tepkiyi, bu müşterinin kanalındaki ilgili
+        """Müşteri tarafından iletilen tepkiyi, ilgili projenin kanalındaki
         mesaja, tepkiyi veren kişinin kontağı adına uygular. `_message_reaction`
         hem kaydı değiştirir hem de canlı bus bildirimini gönderir; böylece
-        temsilciler tepkinin eklenip kaldırılmasını anında görür."""
+        temsilciler tepkinin eklenip kaldırılmasını anında görür.
+
+        Mesajın gerçekten o projenin kanalında olduğu doğrulanır: aksi halde
+        geçerli bir jetonla başka bir kanaldaki mesaja tepki verilebilirdi."""
         self.ensure_one()
         message = self.env['mail.message'].sudo().browse(int(message_id or 0)).exists()
-        if not message or message.model != 'discuss.channel' or message.res_id != self.channel_id.id:
+        channel = project.sudo().support_bridge_channel_id
+        if not message or message.model != 'discuss.channel' or message.res_id != channel.id:
             return False
         author_partner = self._get_or_create_remote_author(
             author_name, remote_id=author_remote_id, email=author_email)
@@ -382,37 +381,47 @@ class SupportBridgeCustomer(models.Model):
         dokunulmaz.
         """
         self.ensure_one()
-        if not self.channel_id:
+        channels = self.project_ids.sudo().support_bridge_channel_id
+        if not channels:
             return
-        channel = self.channel_id.sudo()
-        to_add = self.agent_user_ids.partner_id - channel.channel_member_ids.partner_id
-        if to_add:
-            channel.add_members(partner_ids=to_add.ids)
+        for channel in channels:
+            to_add = self.agent_user_ids.partner_id - channel.channel_member_ids.partner_id
+            if to_add:
+                channel.add_members(partner_ids=to_add.ids)
         if previous_users is None:
             return
-        parent = channel.parent_channel_id
         for user in previous_users - self.agent_user_ids:
             partner = user.partner_id
-            if partner in channel.channel_member_ids.partner_id:
-                channel._action_unfollow(partner=partner, post_leave_message=False)
+            for channel in channels:
+                if partner in channel.channel_member_ids.partner_id:
+                    channel._action_unfollow(partner=partner, post_leave_message=False)
             # Odoo çekirdeği, bir alt kanala eklenen herkesi otomatik olarak üst
             # kanala da üye yapar (discuss.channel.member.create). Üst kanal
             # üyeliği ise tek başına bütün alt kanalları okuma yetkisi verdiği
-            # için, yalnızca alt kanaldan çıkarmak erişimi kesmez. Başka hiçbir
-            # müşteride temsilci kalmayan kişi üst kanaldan da çıkarılmalıdır.
-            if not parent or self.search_count([
-                    ('id', '!=', self.id), ('agent_user_ids', 'in', user.id)]):
-                continue
-            if partner in parent.channel_member_ids.partner_id:
+            # için, yalnızca alt kanaldan çıkarmak erişimi kesmez. Takım grubundan
+            # çıkarmak ise ancak o takımda başka hiçbir projede temsilci
+            # olmadığında doğrudur.
+            for parent in channels.parent_channel_id:
+                if partner not in parent.channel_member_ids.partner_id:
+                    continue
+                if self.env['project.project'].sudo().search_count([
+                        ('support_bridge_channel_id.parent_channel_id', '=', parent.id),
+                        ('support_bridge_customer_id.agent_user_ids', 'in', user.id)]):
+                    continue
                 parent._action_unfollow(partner=partner, post_leave_message=False)
 
-    def action_open_channel(self):
+    @api.depends('project_ids')
+    def _compute_project_count(self):
+        for record in self:
+            record.project_count = len(record.project_ids)
+
+    def action_open_projects(self):
         self.ensure_one()
         return {
             'type': 'ir.actions.act_window',
-            'name': self.channel_id.name,
-            'res_model': 'discuss.channel',
-            'res_id': self.channel_id.id,
-            'view_mode': 'form',
+            'name': _('Projects'),
+            'res_model': 'project.project',
+            'domain': [('support_bridge_customer_id', '=', self.id)],
+            'view_mode': 'list,form',
             'target': 'current',
         }

@@ -16,16 +16,17 @@ class MailMessage(models.Model):
             lambda m: m.model == 'discuss.channel' and m.message_type == 'comment')
         if not channel_messages:
             return
-        customers = self.env['support.bridge.customer'].sudo().search([
-            ('channel_id', 'in', channel_messages.mapped('res_id')),
-        ])
-        if not customers:
+        # Yönlendirme artık müşteriye değil projeye göre: bir müşterinin birden
+        # çok projesi olabilir ve her birinin kendi alt kanalı vardır.
+        project_by_channel = self.env['project.project']._find_bridged_by_channel(
+            channel_messages.mapped('res_id'))
+        if not project_by_channel:
             return
-        customer_by_channel = {c.channel_id.id: c for c in customers}
         for message in channel_messages:
-            customer = customer_by_channel.get(message.res_id)
-            if not customer:
+            project = project_by_channel.get(message.res_id)
+            if not project:
                 continue
+            customer = project.support_bridge_customer_id
             if customer._is_remote_author(message.author_id):
                 continue
             body = html2plaintext(message.body or '').strip()
@@ -43,8 +44,9 @@ class MailMessage(models.Model):
                 'author_email': message.author_id.email or message.email_from or '',
                 'body': body,
                 'create_date': message.create_date.isoformat() if message.create_date else '',
-            })
+            }, project)
             # Sınırı aşan ekler iletilmez; temsilcinin bunu bilmesi gerekir.
             skipped = customer._partition_attachments(message.attachment_ids)[1]
             if skipped:
-                customer._warn_skipped_attachments(skipped)
+                customer._warn_skipped_attachments(
+                    project.sudo().support_bridge_channel_id, skipped)

@@ -10,7 +10,6 @@
     'images': ['static/description/banner.png'],
     'data': [
         'security/ir.model.access.csv',
-        'views/res_company_views.xml',
         'views/support_bridge_customer_views.xml',
         'views/project_project_views.xml',
     ],

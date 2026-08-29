@@ -1,4 +1,3 @@
-from . import res_company
 from . import res_partner
 from . import helpdesk_team
 from . import project_project

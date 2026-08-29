@@ -15,6 +15,11 @@ class SupportBridgeEvent(models.Model):
 
     customer_id = fields.Many2one(
         'support.bridge.customer', required=True, ondelete='cascade', index=True)
+    # Olayın ait olduğu proje; karşı taraf hangi alt kanala yazacağını buradan
+    # türeyen jetondan bulur. Proje silinirse olayın teslim edilecek bir yeri
+    # kalmaz, o yüzden satır da gider.
+    project_id = fields.Many2one(
+        'project.project', required=True, ondelete='cascade', index=True)
     event_type = fields.Selection([
         ('message', 'Message'),
         ('reaction_add', 'Reaction Added'),

@@ -42,6 +42,10 @@ class SupportBridgeHubController(http.Controller):
             'ok': True,
             'hub_name': company.name,
             'customer_name': customer.name,
+            # Müşteri alt kanallarını bu listeden kurar. Jetonu iptal edilmiş
+            # proje listede yer almaz; müşteri tarafında kanal ve geçmiş kalır
+            # ama o projeye artık yazılamaz.
+            'projects': customer._serialize_projects(),
         })
 
     @http.route('/support_bridge/inbound', type='http', auth='public', methods=['POST'], csrf=False)
@@ -50,6 +54,11 @@ class SupportBridgeHubController(http.Controller):
         if not customer:
             return request.make_json_response({'ok': False, 'error': 'invalid_api_key'}, status=401)
         data = request.get_json_data() or {}
+        project = request.env['project.project']._find_by_bridge_token(
+            customer, data.get('project_token'))
+        if not project:
+            return request.make_json_response(
+                {'ok': False, 'error': 'unknown_project'}, status=404)
         text = (data.get('text') or '').strip()
         attachment_tuples = customer._decode_attachments(data.get('attachments'))
         if not text and not attachment_tuples:
@@ -66,7 +75,7 @@ class SupportBridgeHubController(http.Controller):
         if skipped:
             body += Markup('<p><em>%s</em></p>') % _(
                 "Attachment not delivered (size limit): %s", ', '.join(skipped))
-        message = customer.channel_id.sudo().message_post(
+        message = project.sudo().support_bridge_channel_id.message_post(
             body=body,
             attachments=attachment_tuples,
             author_id=author_partner.id,
@@ -86,8 +95,13 @@ class SupportBridgeHubController(http.Controller):
         content = (data.get('content') or '').strip()
         if action not in ('add', 'remove') or not content:
             return request.make_json_response({'ok': False, 'error': 'invalid_reaction'}, status=400)
+        project = request.env['project.project']._find_by_bridge_token(
+            customer, data.get('project_token'))
+        if not project:
+            return request.make_json_response(
+                {'ok': False, 'error': 'unknown_project'}, status=404)
         applied = customer._apply_client_reaction(
-            data.get('message_id'), content, action,
+            project, data.get('message_id'), content, action,
             data.get('author_name'),
             author_remote_id=data.get('author_id'),
             author_email=data.get('author_email'),
