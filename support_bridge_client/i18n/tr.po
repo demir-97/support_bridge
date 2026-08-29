@@ -487,3 +487,129 @@ msgstr "Bu adres için https kullanın"
 #: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_outbox__next_retry
 msgid "Next Retry"
 msgstr "Sonraki Deneme"
+
+
+#. module: support_bridge_client
+#. odoo-python
+#: code:addons/support_bridge_client/models/support_bridge_project.py:0
+msgid ""
+"%s has stopped sharing this project. Messages written here are no longer "
+"delivered. The history stays for reference."
+msgstr "%s bu projeyi paylaşmayı durdurdu. Buraya yazılan mesajlar artık iletilmiyor. Geçmiş, başvurmanız için duruyor."
+
+#. module: support_bridge_client
+#. odoo-python
+#: code:addons/support_bridge_client/models/support_bridge_project.py:0
+msgid ""
+"%s is sharing this project again. Messages written here are delivered from "
+"now on."
+msgstr "%s bu projeyi tekrar paylaşıyor. Buraya yazılan mesajlar bundan sonra iletilir."
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_project__active
+msgid "Active"
+msgstr "Etkin"
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_project__channel_id
+msgid "Channel"
+msgstr "Kanal"
+
+#. module: support_bridge_client
+#: model:ir.model.fields,help:support_bridge_client.field_support_bridge_project__active
+msgid ""
+"Cleared when the vendor stops sharing this project. The channel and its "
+"history stay, but no new messages travel either way."
+msgstr "Tedarikçi bu projeyi paylaşmayı durdurduğunda temizlenir. Kanal ve geçmişi kalır, ama iki yönde de yeni mesaj gidip gelmez."
+
+#. module: support_bridge_client
+#: model:ir.model.fields,help:support_bridge_client.field_support_bridge_project__token
+msgid ""
+"Credential proving which project a message belongs to. Issued by the vendor "
+"and replaced whenever they rotate it."
+msgstr "Bir mesajın hangi projeye ait olduğunu kanıtlayan kimlik bilgisi. Tedarikçi tarafından verilir ve yenilediklerinde değişir."
+
+#. module: support_bridge_client
+#. odoo-python
+#: code:addons/support_bridge_client/models/support_bridge_project.py:0
+msgid "Not delivered — %s is no longer sharing this project with you."
+msgstr "İletilmedi — %s bu projeyi artık sizinle paylaşmıyor."
+
+#. module: support_bridge_client
+#. odoo-python
+#: code:addons/support_bridge_client/models/support_bridge_project.py:0
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_outbox__project_id
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_project__name
+msgid "Project"
+msgstr "Proje"
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_connection__project_ids
+#: model_terms:ir.ui.view,arch_db:support_bridge_client.view_support_bridge_connection_form
+msgid "Projects"
+msgstr "Projeler"
+
+#. module: support_bridge_client
+#: model:ir.model,name:support_bridge_client.model_support_bridge_project
+msgid "Support Bridge Vendor Project"
+msgstr "Support Bridge Tedarikçi Projesi"
+
+#. module: support_bridge_client
+#: model:ir.model.fields,help:support_bridge_client.field_support_bridge_project__channel_id
+msgid ""
+"The Discuss sub-channel for this project, nested under the vendor's group."
+msgstr "Bu projenin, tedarikçinin grubu altına yerleşen Discuss alt kanalı."
+
+#. module: support_bridge_client
+#: model:ir.model.fields,help:support_bridge_client.field_support_bridge_project__remote_id
+msgid ""
+"The project's own id on the vendor's side. Records are matched on this, "
+"never on the token: a token is a password and can be rotated, and matching "
+"on it would fork the conversation."
+msgstr "Projenin tedarikçi tarafındaki kendi kimliği. Kayıtlar buna göre eşleştirilir, asla jetona göre değil: jeton bir paroladır, yenilenebilir ve ona göre eşleştirmek sohbeti ikiye bölerdi."
+
+#. module: support_bridge_client
+#: model:ir.model.fields,help:support_bridge_client.field_support_bridge_connection__project_ids
+msgid ""
+"The projects your vendor shares with you. Each has its own chat channel "
+"under the vendor's group."
+msgstr "Tedarikçinizin sizinle paylaştığı projeler. Her birinin tedarikçinin grubu altında kendi sohbet kanalı vardır."
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_project__token
+msgid "Token"
+msgstr "Jeton"
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_project__remote_id
+msgid "Vendor Project Id"
+msgstr "Tedarikçi Proje Kimliği"
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_project__team_name
+msgid "Vendor Team"
+msgstr "Tedarikçi Ekibi"
+
+#. module: support_bridge_client
+#: model:ir.model.fields,help:support_bridge_client.field_support_bridge_project__team_name
+msgid "Which of the vendor's support teams handles this project."
+msgstr "Bu projeyi tedarikçinin hangi destek ekibinin yürüttüğü."
+
+#. module: support_bridge_client
+#. odoo-python
+#: code:addons/support_bridge_client/models/support_bridge_project.py:0
+msgid "Your vendor"
+msgstr "Tedarikçiniz"
+
+#. module: support_bridge_client
+#: model_terms:ir.ui.view,arch_db:support_bridge_client.view_support_bridge_connection_form
+msgid ""
+"Your vendor decides which projects are shared here.\n"
+"                                Press Connect to pick up newly shared ones."
+msgstr "Burada hangi projelerin paylaşılacağına tedarikçiniz karar verir.\n                                Yeni paylaşılanları almak için Bağlan'a basın."
+
+#. module: support_bridge_client
+#. odoo-python
+#: code:addons/support_bridge_client/models/support_bridge_project.py:0
+msgid "your vendor"
+msgstr "tedarikçiniz"

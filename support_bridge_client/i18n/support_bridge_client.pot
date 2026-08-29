@@ -6,14 +6,22 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0+e-20260630\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-29 13:23+0000\n"
-"PO-Revision-Date: 2026-08-29 13:23+0000\n"
+"POT-Creation-Date: 2026-08-29 20:45+0000\n"
+"PO-Revision-Date: 2026-08-29 20:45+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: \n"
+
+#. module: support_bridge_client
+#. odoo-python
+#: code:addons/support_bridge_client/models/support_bridge_project.py:0
+msgid ""
+"%s has stopped sharing this project. Messages written here are no longer "
+"delivered. The history stays for reference."
+msgstr ""
 
 #. module: support_bridge_client
 #. odoo-python
@@ -34,8 +42,21 @@ msgid ""
 msgstr ""
 
 #. module: support_bridge_client
+#. odoo-python
+#: code:addons/support_bridge_client/models/support_bridge_project.py:0
+msgid ""
+"%s is sharing this project again. Messages written here are delivered from "
+"now on."
+msgstr ""
+
+#. module: support_bridge_client
 #: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_connection__api_key
 msgid "API Key"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_project__active
+msgid "Active"
 msgstr ""
 
 #. module: support_bridge_client
@@ -77,9 +98,21 @@ msgid "Body"
 msgstr ""
 
 #. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_project__channel_id
+msgid "Channel"
+msgstr ""
+
+#. module: support_bridge_client
 #. odoo-python
 #: code:addons/support_bridge_client/models/support_bridge_connection.py:0
 msgid "Check this address"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields,help:support_bridge_client.field_support_bridge_project__active
+msgid ""
+"Cleared when the vendor stops sharing this project. The channel and its "
+"history stay, but no new messages travel either way."
 msgstr ""
 
 #. module: support_bridge_client
@@ -100,6 +133,7 @@ msgstr ""
 #. module: support_bridge_client
 #: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_message_map__connection_id
 #: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_outbox__connection_id
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_project__connection_id
 msgid "Connection"
 msgstr ""
 
@@ -123,6 +157,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_connection__create_uid
 #: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_message_map__create_uid
 #: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_outbox__create_uid
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_project__create_uid
 msgid "Created by"
 msgstr ""
 
@@ -130,7 +165,15 @@ msgstr ""
 #: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_connection__create_date
 #: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_message_map__create_date
 #: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_outbox__create_date
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_project__create_date
 msgid "Created on"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields,help:support_bridge_client.field_support_bridge_project__token
+msgid ""
+"Credential proving which project a message belongs to. Issued by the vendor "
+"and replaced whenever they rotate it."
 msgstr ""
 
 #. module: support_bridge_client
@@ -145,6 +188,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_connection__display_name
 #: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_message_map__display_name
 #: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_outbox__display_name
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_project__display_name
 msgid "Display Name"
 msgstr ""
 
@@ -175,6 +219,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_connection__id
 #: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_message_map__id
 #: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_outbox__id
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_project__id
 msgid "ID"
 msgstr ""
 
@@ -203,6 +248,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_connection__write_uid
 #: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_message_map__write_uid
 #: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_outbox__write_uid
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_project__write_uid
 msgid "Last Updated by"
 msgstr ""
 
@@ -210,6 +256,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_connection__write_date
 #: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_message_map__write_date
 #: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_outbox__write_date
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_project__write_date
 msgid "Last Updated on"
 msgstr ""
 
@@ -270,6 +317,12 @@ msgid ""
 msgstr ""
 
 #. module: support_bridge_client
+#. odoo-python
+#: code:addons/support_bridge_client/models/support_bridge_project.py:0
+msgid "Not delivered — %s is no longer sharing this project with you."
+msgstr ""
+
+#. module: support_bridge_client
 #: model_terms:ir.actions.act_window,help:support_bridge_client.action_support_bridge_connection
 msgid ""
 "Paste the Hub URL and API Key your vendor gave you, then click Connect."
@@ -295,6 +348,20 @@ msgstr ""
 #. odoo-python
 #: code:addons/support_bridge_client/models/support_bridge_connection.py:0
 msgid "Please fill in your Public URL, or disable Publicly Reachable."
+msgstr ""
+
+#. module: support_bridge_client
+#. odoo-python
+#: code:addons/support_bridge_client/models/support_bridge_project.py:0
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_outbox__project_id
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_project__name
+msgid "Project"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_connection__project_ids
+#: model_terms:ir.ui.view,arch_db:support_bridge_client.view_support_bridge_connection_form
+msgid "Projects"
 msgstr ""
 
 #. module: support_bridge_client
@@ -344,6 +411,11 @@ msgid "Support Bridge Remote Contact"
 msgstr ""
 
 #. module: support_bridge_client
+#: model:ir.model,name:support_bridge_client.model_support_bridge_project
+msgid "Support Bridge Vendor Project"
+msgstr ""
+
+#. module: support_bridge_client
 #. odoo-python
 #: code:addons/support_bridge_client/models/support_bridge_connection.py:0
 msgid ""
@@ -384,6 +456,12 @@ msgid "The Discuss channel where you chat with your vendor's support team."
 msgstr ""
 
 #. module: support_bridge_client
+#: model:ir.model.fields,help:support_bridge_client.field_support_bridge_project__channel_id
+msgid ""
+"The Discuss sub-channel for this project, nested under the vendor's group."
+msgstr ""
+
+#. module: support_bridge_client
 #. odoo-python
 #: code:addons/support_bridge_client/models/support_bridge_connection.py:0
 msgid "The Hub rejected the connection (HTTP %s). Check the API Key."
@@ -393,6 +471,21 @@ msgstr ""
 #. odoo-python
 #: code:addons/support_bridge_client/models/support_bridge_connection.py:0
 msgid "The Hub rejected the connection: %s"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields,help:support_bridge_client.field_support_bridge_project__remote_id
+msgid ""
+"The project's own id on the vendor's side. Records are matched on this, "
+"never on the token: a token is a password and can be rotated, and matching "
+"on it would fork the conversation."
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields,help:support_bridge_client.field_support_bridge_connection__project_ids
+msgid ""
+"The projects your vendor shares with you. Each has its own chat channel "
+"under the vendor's group."
 msgstr ""
 
 #. module: support_bridge_client
@@ -407,6 +500,11 @@ msgstr ""
 msgid ""
 "This instance's own public base URL, e.g. https://mycompany.odoo.com — "
 "required when Publicly Reachable is enabled."
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_project__token
+msgid "Token"
 msgstr ""
 
 #. module: support_bridge_client
@@ -437,9 +535,24 @@ msgid "Vendor Contact"
 msgstr ""
 
 #. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_project__remote_id
+msgid "Vendor Project Id"
+msgstr ""
+
+#. module: support_bridge_client
 #: model:ir.actions.act_window,name:support_bridge_client.action_support_bridge_connection
 #: model:ir.ui.menu,name:support_bridge_client.menu_support_bridge_connection
 msgid "Vendor Support"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_project__team_name
+msgid "Vendor Team"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields,help:support_bridge_client.field_support_bridge_project__team_name
+msgid "Which of the vendor's support teams handles this project."
 msgstr ""
 
 #. module: support_bridge_client
@@ -452,6 +565,19 @@ msgid ""
 msgstr ""
 
 #. module: support_bridge_client
+#. odoo-python
+#: code:addons/support_bridge_client/models/support_bridge_project.py:0
+msgid "Your vendor"
+msgstr ""
+
+#. module: support_bridge_client
+#: model_terms:ir.ui.view,arch_db:support_bridge_client.view_support_bridge_connection_form
+msgid ""
+"Your vendor decides which projects are shared here.\n"
+"                                Press Connect to pick up newly shared ones."
+msgstr ""
+
+#. module: support_bridge_client
 #: model_terms:ir.ui.view,arch_db:support_bridge_client.view_support_bridge_connection_form
 msgid "https://mycompany.odoo.com"
 msgstr ""
@@ -459,4 +585,10 @@ msgstr ""
 #. module: support_bridge_client
 #: model_terms:ir.ui.view,arch_db:support_bridge_client.view_support_bridge_connection_form
 msgid "https://support.yourvendor.com"
+msgstr ""
+
+#. module: support_bridge_client
+#. odoo-python
+#: code:addons/support_bridge_client/models/support_bridge_project.py:0
+msgid "your vendor"
 msgstr ""

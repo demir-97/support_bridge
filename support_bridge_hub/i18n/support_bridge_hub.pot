@@ -6,14 +6,21 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0+e-20260630\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-28 12:25+0000\n"
-"PO-Revision-Date: 2026-08-28 12:25+0000\n"
+"POT-Creation-Date: 2026-08-29 20:44+0000\n"
+"PO-Revision-Date: 2026-08-29 20:44+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: \n"
+
+#. module: support_bridge_hub
+#. odoo-python
+#: code:addons/support_bridge_hub/models/project_project.py:0
+msgid ""
+"%s is archived, so they cannot receive anything. Restore the customer first."
+msgstr ""
 
 #. module: support_bridge_hub
 #: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_customer__api_key
@@ -23,11 +30,6 @@ msgstr ""
 #. module: support_bridge_hub
 #: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_customer__active
 msgid "Active"
-msgstr ""
-
-#. module: support_bridge_hub
-#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_customer__agent_user_ids
-msgid "Agents"
 msgstr ""
 
 #. module: support_bridge_hub
@@ -50,8 +52,8 @@ msgid ""
 msgstr ""
 
 #. module: support_bridge_hub
-#: model:ir.model,name:support_bridge_hub.model_res_company
-msgid "Companies"
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_customer__project_ids
+msgid "Bridged Projects"
 msgstr ""
 
 #. module: support_bridge_hub
@@ -107,6 +109,11 @@ msgid "Customer Contact"
 msgstr ""
 
 #. module: support_bridge_hub
+#: model_terms:ir.ui.view,arch_db:support_bridge_hub.view_project_form_support_bridge
+msgid "Customer Conversation"
+msgstr ""
+
+#. module: support_bridge_hub
 #: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_customer__client_public_url
 msgid "Customer Public URL"
 msgstr ""
@@ -117,9 +124,10 @@ msgid "Customer company name"
 msgstr ""
 
 #. module: support_bridge_hub
+#: model:ir.model.fields,field_description:support_bridge_hub.field_helpdesk_team__display_name
 #: model:ir.model.fields,field_description:support_bridge_hub.field_mail_message__display_name
 #: model:ir.model.fields,field_description:support_bridge_hub.field_mail_message_reaction__display_name
-#: model:ir.model.fields,field_description:support_bridge_hub.field_res_company__display_name
+#: model:ir.model.fields,field_description:support_bridge_hub.field_project_project__display_name
 #: model:ir.model.fields,field_description:support_bridge_hub.field_res_partner__display_name
 #: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_customer__display_name
 #: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_event__display_name
@@ -132,14 +140,6 @@ msgid "Event Type"
 msgstr ""
 
 #. module: support_bridge_hub
-#: model:ir.model.fields,help:support_bridge_hub.field_res_company__support_bridge_parent_channel_id
-msgid ""
-"Every customer's support channel is created as a sub-channel of this one, so"
-" they all appear neatly grouped in Discuss. Leave empty to auto-create one "
-"the first time a customer connects."
-msgstr ""
-
-#. module: support_bridge_hub
 #: model:ir.model.fields,help:support_bridge_hub.field_support_bridge_customer__api_key
 msgid ""
 "Hand this key, together with this server's address, to the customer — they "
@@ -147,9 +147,16 @@ msgid ""
 msgstr ""
 
 #. module: support_bridge_hub
+#: model:ir.model,name:support_bridge_hub.model_helpdesk_team
+#: model:ir.model.fields,field_description:support_bridge_hub.field_project_project__support_bridge_team_id
+msgid "Helpdesk Team"
+msgstr ""
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,field_description:support_bridge_hub.field_helpdesk_team__id
 #: model:ir.model.fields,field_description:support_bridge_hub.field_mail_message__id
 #: model:ir.model.fields,field_description:support_bridge_hub.field_mail_message_reaction__id
-#: model:ir.model.fields,field_description:support_bridge_hub.field_res_company__id
+#: model:ir.model.fields,field_description:support_bridge_hub.field_project_project__id
 #: model:ir.model.fields,field_description:support_bridge_hub.field_res_partner__id
 #: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_customer__id
 #: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_event__id
@@ -157,9 +164,11 @@ msgid "ID"
 msgstr ""
 
 #. module: support_bridge_hub
-#: model:ir.model.fields,help:support_bridge_hub.field_support_bridge_customer__agent_user_ids
+#: model:ir.model.fields,help:support_bridge_hub.field_project_project__support_bridge_token
 msgid ""
-"Internal users who can see and reply in this customer's support channel."
+"Identifies this project in messages exchanged with the customer. Revoking it"
+" stops this project's conversation without touching the customer's other "
+"projects or their connection."
 msgstr ""
 
 #. module: support_bridge_hub
@@ -209,6 +218,13 @@ msgid "Message Reaction"
 msgstr ""
 
 #. module: support_bridge_hub
+#: model_terms:ir.ui.view,arch_db:support_bridge_hub.view_project_form_support_bridge
+msgid ""
+"Messages stop travelling both ways. Both channels and their history stay, "
+"and each side is told that sharing ended. Continue?"
+msgstr ""
+
+#. module: support_bridge_hub
 #. odoo-python
 #: code:addons/support_bridge_hub/models/support_bridge_customer.py:0
 msgid "New Connection"
@@ -224,18 +240,72 @@ msgid ""
 msgstr ""
 
 #. module: support_bridge_hub
+#. odoo-python
+#: code:addons/support_bridge_hub/models/project_project.py:0
+msgid ""
+"Not delivered — this project is no longer shared with %s. Press Share on the"
+" project to resume the conversation."
+msgstr ""
+
+#. module: support_bridge_hub
 #: model_terms:ir.ui.view,arch_db:support_bridge_hub.view_support_bridge_customer_form
 msgid "Not reachable — relies on their own polling"
 msgstr ""
 
 #. module: support_bridge_hub
-#: model_terms:ir.ui.view,arch_db:support_bridge_hub.view_support_bridge_customer_form
-msgid "Open Channel"
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_event__payload
+msgid "Payload"
 msgstr ""
 
 #. module: support_bridge_hub
-#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_event__payload
-msgid "Payload"
+#: model_terms:ir.ui.view,arch_db:support_bridge_hub.view_project_form_support_bridge
+msgid ""
+"Pick the customer and the helpdesk team, then press Share.\n"
+"                        Nothing reaches the customer until you do."
+msgstr ""
+
+#. module: support_bridge_hub
+#. odoo-python
+#: code:addons/support_bridge_hub/models/project_project.py:0
+msgid "Pick the customer this project belongs to before sharing it."
+msgstr ""
+
+#. module: support_bridge_hub
+#. odoo-python
+#: code:addons/support_bridge_hub/models/project_project.py:0
+msgid ""
+"Pick the helpdesk team that will handle this project. The team decides who "
+"can see the conversation."
+msgstr ""
+
+#. module: support_bridge_hub
+#. odoo-python
+#: code:addons/support_bridge_hub/models/project_project.py:0
+#: model:ir.model,name:support_bridge_hub.model_project_project
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_event__project_id
+msgid "Project"
+msgstr ""
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_customer__project_count
+msgid "Project Count"
+msgstr ""
+
+#. module: support_bridge_hub
+#: model:ir.model.fields.selection,name:support_bridge_hub.selection__support_bridge_event__event_type__project_sync
+msgid "Project List Changed"
+msgstr ""
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,field_description:support_bridge_hub.field_project_project__support_bridge_token
+msgid "Project Token"
+msgstr ""
+
+#. module: support_bridge_hub
+#. odoo-python
+#: code:addons/support_bridge_hub/models/support_bridge_customer.py:0
+#: model_terms:ir.ui.view,arch_db:support_bridge_hub.view_support_bridge_customer_form
+msgid "Projects"
 msgstr ""
 
 #. module: support_bridge_hub
@@ -249,9 +319,62 @@ msgid "Reaction Removed"
 msgstr ""
 
 #. module: support_bridge_hub
+#: model_terms:ir.ui.view,arch_db:support_bridge_hub.view_project_form_support_bridge
+msgid "Rotate Token"
+msgstr ""
+
+#. module: support_bridge_hub
 #. odoo-python
-#: code:addons/support_bridge_hub/models/support_bridge_customer.py:0
-msgid "Support"
+#: code:addons/support_bridge_hub/models/project_project.py:0
+msgid "Share this project before rotating its token."
+msgstr ""
+
+#. module: support_bridge_hub
+#: model_terms:ir.ui.view,arch_db:support_bridge_hub.view_project_form_support_bridge
+msgid "Share with Customer"
+msgstr ""
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,field_description:support_bridge_hub.field_project_project__support_bridge_shared
+msgid "Shared with Customer"
+msgstr ""
+
+#. module: support_bridge_hub
+#: model_terms:ir.ui.view,arch_db:support_bridge_hub.view_project_form_support_bridge
+msgid "Sharing"
+msgstr ""
+
+#. module: support_bridge_hub
+#. odoo-python
+#: code:addons/support_bridge_hub/models/project_project.py:0
+msgid ""
+"Sharing stopped. %s can no longer send or receive messages here, and they "
+"have been told so in their own channel."
+msgstr ""
+
+#. module: support_bridge_hub
+#: model_terms:ir.ui.view,arch_db:support_bridge_hub.view_support_bridge_customer_form
+msgid "Status"
+msgstr ""
+
+#. module: support_bridge_hub
+#: model_terms:ir.ui.view,arch_db:support_bridge_hub.view_project_form_support_bridge
+msgid "Stop Sharing"
+msgstr ""
+
+#. module: support_bridge_hub
+#: model_terms:ir.ui.view,arch_db:support_bridge_hub.view_project_form_support_bridge
+msgid "Support Bridge"
+msgstr ""
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,field_description:support_bridge_hub.field_helpdesk_team__support_bridge_channel_id
+msgid "Support Bridge Channel"
+msgstr ""
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,field_description:support_bridge_hub.field_project_project__support_bridge_customer_id
+msgid "Support Bridge Customer"
 msgstr ""
 
 #. module: support_bridge_hub
@@ -285,24 +408,21 @@ msgid ""
 msgstr ""
 
 #. module: support_bridge_hub
-#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_customer__channel_id
+#: model:ir.model.fields,field_description:support_bridge_hub.field_project_project__support_bridge_channel_id
 msgid "Support Channel"
 msgstr ""
 
 #. module: support_bridge_hub
 #: model:ir.ui.menu,name:support_bridge_hub.menu_support_bridge_customer_root
-#: model_terms:ir.ui.view,arch_db:support_bridge_hub.view_company_form_inherit_support_bridge
 msgid "Support Hub"
 msgstr ""
 
 #. module: support_bridge_hub
-#: model:ir.model.fields,field_description:support_bridge_hub.field_res_company__support_bridge_parent_channel_id
-msgid "Support Parent Channel"
-msgstr ""
-
-#. module: support_bridge_hub
-#: model_terms:ir.ui.view,arch_db:support_bridge_hub.view_support_bridge_customer_form
-msgid "Team"
+#: model:ir.model.fields,help:support_bridge_hub.field_helpdesk_team__support_bridge_channel_id
+msgid ""
+"The Discuss group that holds this team's customer conversations. Each "
+"bridged project appears as a sub-channel under it, and the team's members "
+"are exactly who can see them."
 msgstr ""
 
 #. module: support_bridge_hub
@@ -313,10 +433,49 @@ msgid ""
 msgstr ""
 
 #. module: support_bridge_hub
-#: model:ir.model.fields,help:support_bridge_hub.field_support_bridge_customer__channel_id
+#: model:ir.model.fields,help:support_bridge_hub.field_support_bridge_customer__project_ids
 msgid ""
-"This customer's dedicated Discuss channel, nested under the shared Support "
-"parent channel."
+"The projects this customer talks to you about. Each one has its own chat "
+"channel on both sides and its own revocable token."
+msgstr ""
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,help:support_bridge_hub.field_project_project__support_bridge_team_id
+msgid ""
+"The team that handles support for this project. Every project on the same "
+"team shares one Discuss group, and each project is a sub-channel under it."
+msgstr ""
+
+#. module: support_bridge_hub
+#: model_terms:ir.ui.view,arch_db:support_bridge_hub.view_project_form_support_bridge
+msgid ""
+"This opens a chat channel for this project on the customer's side and starts"
+" delivering messages both ways. Continue?"
+msgstr ""
+
+#. module: support_bridge_hub
+#. odoo-python
+#: code:addons/support_bridge_hub/models/project_project.py:0
+msgid ""
+"This project's conversation already has messages under %(old)s, and Odoo "
+"cannot move a sub-channel to another group. Either keep the current team, or"
+" revoke this project and link it again to start a fresh channel under "
+"%(new)s."
+msgstr ""
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,help:support_bridge_hub.field_project_project__support_bridge_channel_id
+msgid ""
+"This project's dedicated Discuss sub-channel, nested under the helpdesk "
+"team's group."
+msgstr ""
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,help:support_bridge_hub.field_project_project__support_bridge_shared
+msgid ""
+"Turns on when you share the project, and stays on until you stop sharing. "
+"Setting a customer and a team only prepares the project — nothing reaches "
+"them until you press Share."
 msgstr ""
 
 #. module: support_bridge_hub
@@ -326,10 +485,36 @@ msgid "Unknown"
 msgstr ""
 
 #. module: support_bridge_hub
+#: model_terms:ir.ui.view,arch_db:support_bridge_hub.view_project_form_support_bridge
+msgid ""
+"Use this if the connection may have been exposed. The customer keeps working"
+" without doing anything. Continue?"
+msgstr ""
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,help:support_bridge_hub.field_project_project__support_bridge_customer_id
+msgid ""
+"Which connected customer this project's support conversation belongs to. "
+"Setting it opens a dedicated chat channel for this project on both sides."
+msgstr ""
+
+#. module: support_bridge_hub
 #: model:ir.model.fields,help:support_bridge_hub.field_res_partner__support_bridge_hub_remote_id
 #: model:ir.model.fields,help:support_bridge_hub.field_res_users__support_bridge_hub_remote_id
 msgid ""
 "Which person on the customer's side this auto-created contact mirrors. "
 "Contacts are matched on this id — never on the name, because two people can "
 "share a name and a person can be renamed."
+msgstr ""
+
+#. module: support_bridge_hub
+#. odoo-python
+#: code:addons/support_bridge_hub/models/support_bridge_customer.py:0
+msgid "support_bridge_customer_id"
+msgstr ""
+
+#. module: support_bridge_hub
+#. odoo-python
+#: code:addons/support_bridge_hub/models/project_project.py:0
+msgid "the customer"
 msgstr ""
