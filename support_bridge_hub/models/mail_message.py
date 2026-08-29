@@ -1,0 +1,50 @@
+from odoo import api, models
+from odoo.tools.mail import html2plaintext
+
+
+class MailMessage(models.Model):
+    _inherit = 'mail.message'
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        messages = super().create(vals_list)
+        messages._support_bridge_enqueue_outbound()
+        return messages
+
+    def _support_bridge_enqueue_outbound(self):
+        channel_messages = self.filtered(
+            lambda m: m.model == 'discuss.channel' and m.message_type == 'comment')
+        if not channel_messages:
+            return
+        customers = self.env['support.bridge.customer'].sudo().search([
+            ('channel_id', 'in', channel_messages.mapped('res_id')),
+        ])
+        if not customers:
+            return
+        customer_by_channel = {c.channel_id.id: c for c in customers}
+        for message in channel_messages:
+            customer = customer_by_channel.get(message.res_id)
+            if not customer:
+                continue
+            if customer._is_remote_author(message.author_id):
+                continue
+            body = html2plaintext(message.body or '').strip()
+            if not body and not message.attachment_ids:
+                continue
+            customer._enqueue_event('message', {
+                'message_id': message.id,
+                # Kimlik anahtarı partner id'sidir; ad ve e-posta yalnızca
+                # görünen bilgidir. display_name değil name gönderilir:
+                # display_name yazarın kendi şirket önekini taşır
+                # ("YourCompany, Ali") ve karşı tarafta bu önek kontak adının
+                # içine gömülüp iç içe geçmiş bir ada yol açar.
+                'author_id': message.author_id.id,
+                'author_name': message.author_id.name or message.email_from or '',
+                'author_email': message.author_id.email or message.email_from or '',
+                'body': body,
+                'create_date': message.create_date.isoformat() if message.create_date else '',
+            })
+            # Sınırı aşan ekler iletilmez; temsilcinin bunu bilmesi gerekir.
+            skipped = customer._partition_attachments(message.attachment_ids)[1]
+            if skipped:
+                customer._warn_skipped_attachments(skipped)

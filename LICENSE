@@ -1,0 +1,16 @@
+Copyright (c) CodeQuarters
+
+The modules in this repository (support_bridge_hub, support_bridge_client) are
+licensed under the Odoo Proprietary License v1.0 (OPL-1), as declared in each
+module's __manifest__.py.
+
+The source is published here for review, audit and issue reporting. Publication
+does not grant redistribution or resale rights: use is governed by OPL-1, which
+permits a purchaser to use and modify the software on their own Odoo instances
+but not to redistribute it, with or without modification.
+
+The authoritative license text is maintained by Odoo S.A. and is available at:
+
+    https://www.odoo.com/documentation/master/legal/licenses.html
+
+If you need terms other than OPL-1 for your deployment, contact CodeQuarters.

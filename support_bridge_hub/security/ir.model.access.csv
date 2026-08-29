@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_support_bridge_customer_system,support.bridge.customer.system,model_support_bridge_customer,base.group_system,1,1,1,1
+access_support_bridge_event_system,support.bridge.event.system,model_support_bridge_event,base.group_system,1,1,1,1

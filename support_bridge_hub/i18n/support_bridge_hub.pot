@@ -1,0 +1,335 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* support_bridge_hub
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 19.0+e-20260630\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-08-28 12:25+0000\n"
+"PO-Revision-Date: 2026-08-28 12:25+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_customer__api_key
+msgid "API Key"
+msgstr ""
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_customer__active
+msgid "Active"
+msgstr ""
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_customer__agent_user_ids
+msgid "Agents"
+msgstr ""
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,help:support_bridge_hub.field_support_bridge_customer__active
+msgid ""
+"Archive a customer to block their access without deleting the chat history."
+msgstr ""
+
+#. module: support_bridge_hub
+#. odoo-python
+#: code:addons/support_bridge_hub/controllers/main.py:0
+msgid "Attachment not delivered (size limit): %s"
+msgstr ""
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,help:support_bridge_hub.field_support_bridge_customer__partner_id
+msgid ""
+"Auto-created contact representing the customer's company; relayed messages "
+"are attributed to individual contacts nested under it."
+msgstr ""
+
+#. module: support_bridge_hub
+#: model:ir.model,name:support_bridge_hub.model_res_company
+msgid "Companies"
+msgstr ""
+
+#. module: support_bridge_hub
+#: model_terms:ir.actions.act_window,help:support_bridge_hub.action_support_bridge_customer
+msgid "Connect your first customer"
+msgstr ""
+
+#. module: support_bridge_hub
+#: model_terms:ir.ui.view,arch_db:support_bridge_hub.view_support_bridge_customer_form
+msgid "Connection"
+msgstr ""
+
+#. module: support_bridge_hub
+#: model:ir.model,name:support_bridge_hub.model_res_partner
+msgid "Contact"
+msgstr ""
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_customer__create_uid
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_event__create_uid
+msgid "Created by"
+msgstr ""
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_customer__create_date
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_event__create_date
+msgid "Created on"
+msgstr ""
+
+#. module: support_bridge_hub
+#: model_terms:ir.actions.act_window,help:support_bridge_hub.action_support_bridge_customer
+msgid ""
+"Creates a contact and a Discuss channel for this customer automatically.\n"
+"               Give the generated API Key and this server's address to the customer so\n"
+"               they can connect from their own Support Bridge Client settings."
+msgstr ""
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_customer__name
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_event__customer_id
+msgid "Customer"
+msgstr ""
+
+#. module: support_bridge_hub
+#: model:ir.actions.act_window,name:support_bridge_hub.action_support_bridge_customer
+#: model:ir.ui.menu,name:support_bridge_hub.menu_support_bridge_customer
+msgid "Customer Connections"
+msgstr ""
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_customer__partner_id
+msgid "Customer Contact"
+msgstr ""
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_customer__client_public_url
+msgid "Customer Public URL"
+msgstr ""
+
+#. module: support_bridge_hub
+#: model_terms:ir.ui.view,arch_db:support_bridge_hub.view_support_bridge_customer_form
+msgid "Customer company name"
+msgstr ""
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,field_description:support_bridge_hub.field_mail_message__display_name
+#: model:ir.model.fields,field_description:support_bridge_hub.field_mail_message_reaction__display_name
+#: model:ir.model.fields,field_description:support_bridge_hub.field_res_company__display_name
+#: model:ir.model.fields,field_description:support_bridge_hub.field_res_partner__display_name
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_customer__display_name
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_event__display_name
+msgid "Display Name"
+msgstr ""
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_event__event_type
+msgid "Event Type"
+msgstr ""
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,help:support_bridge_hub.field_res_company__support_bridge_parent_channel_id
+msgid ""
+"Every customer's support channel is created as a sub-channel of this one, so"
+" they all appear neatly grouped in Discuss. Leave empty to auto-create one "
+"the first time a customer connects."
+msgstr ""
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,help:support_bridge_hub.field_support_bridge_customer__api_key
+msgid ""
+"Hand this key, together with this server's address, to the customer — they "
+"paste both into their Support Bridge Client settings to connect."
+msgstr ""
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,field_description:support_bridge_hub.field_mail_message__id
+#: model:ir.model.fields,field_description:support_bridge_hub.field_mail_message_reaction__id
+#: model:ir.model.fields,field_description:support_bridge_hub.field_res_company__id
+#: model:ir.model.fields,field_description:support_bridge_hub.field_res_partner__id
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_customer__id
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_event__id
+msgid "ID"
+msgstr ""
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,help:support_bridge_hub.field_support_bridge_customer__agent_user_ids
+msgid ""
+"Internal users who can see and reply in this customer's support channel."
+msgstr ""
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_customer__last_seen
+msgid "Last Contact"
+msgstr ""
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_customer__write_uid
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_event__write_uid
+msgid "Last Updated by"
+msgstr ""
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_customer__write_date
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_event__write_date
+msgid "Last Updated on"
+msgstr ""
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,help:support_bridge_hub.field_support_bridge_customer__last_seen
+msgid "Last time the customer's Odoo reached this server."
+msgstr ""
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,help:support_bridge_hub.field_support_bridge_customer__client_public_url
+msgid ""
+"Learned from the customer's own connection settings when they enable "
+"'Publicly Reachable' on their side — used to push replies to them instantly."
+" Empty means they rely on their own polling only (e.g. behind a firewall)."
+msgstr ""
+
+#. module: support_bridge_hub
+#: model_terms:ir.ui.view,arch_db:support_bridge_hub.view_support_bridge_customer_form
+msgid "Linked Records"
+msgstr ""
+
+#. module: support_bridge_hub
+#: model:ir.model,name:support_bridge_hub.model_mail_message
+#: model:ir.model.fields.selection,name:support_bridge_hub.selection__support_bridge_event__event_type__message
+msgid "Message"
+msgstr ""
+
+#. module: support_bridge_hub
+#: model:ir.model,name:support_bridge_hub.model_mail_message_reaction
+msgid "Message Reaction"
+msgstr ""
+
+#. module: support_bridge_hub
+#. odoo-python
+#: code:addons/support_bridge_hub/models/support_bridge_customer.py:0
+msgid "New Connection"
+msgstr ""
+
+#. module: support_bridge_hub
+#. odoo-python
+#: code:addons/support_bridge_hub/models/support_bridge_customer.py:0
+msgid ""
+"Not delivered to %(customer)s — attachments are limited to %(size)s MB per "
+"file and %(count)s files per message: %(names)s. Send a download link "
+"instead."
+msgstr ""
+
+#. module: support_bridge_hub
+#: model_terms:ir.ui.view,arch_db:support_bridge_hub.view_support_bridge_customer_form
+msgid "Not reachable — relies on their own polling"
+msgstr ""
+
+#. module: support_bridge_hub
+#: model_terms:ir.ui.view,arch_db:support_bridge_hub.view_support_bridge_customer_form
+msgid "Open Channel"
+msgstr ""
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_event__payload
+msgid "Payload"
+msgstr ""
+
+#. module: support_bridge_hub
+#: model:ir.model.fields.selection,name:support_bridge_hub.selection__support_bridge_event__event_type__reaction_add
+msgid "Reaction Added"
+msgstr ""
+
+#. module: support_bridge_hub
+#: model:ir.model.fields.selection,name:support_bridge_hub.selection__support_bridge_event__event_type__reaction_remove
+msgid "Reaction Removed"
+msgstr ""
+
+#. module: support_bridge_hub
+#. odoo-python
+#: code:addons/support_bridge_hub/models/support_bridge_customer.py:0
+msgid "Support"
+msgstr ""
+
+#. module: support_bridge_hub
+#: model:ir.model,name:support_bridge_hub.model_support_bridge_customer
+msgid "Support Bridge Customer Connection"
+msgstr ""
+
+#. module: support_bridge_hub
+#: model:ir.model,name:support_bridge_hub.model_support_bridge_event
+msgid "Support Bridge Outbound Event Queue"
+msgstr ""
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,field_description:support_bridge_hub.field_res_partner__support_bridge_hub_remote_id
+#: model:ir.model.fields,field_description:support_bridge_hub.field_res_users__support_bridge_hub_remote_id
+msgid "Support Bridge Remote Contact"
+msgstr ""
+
+#. module: support_bridge_hub
+#. odoo-python
+#: code:addons/support_bridge_hub/models/support_bridge_customer.py:0
+msgid "Support Bridge customer persona — do not merge or delete."
+msgstr ""
+
+#. module: support_bridge_hub
+#. odoo-python
+#: code:addons/support_bridge_hub/models/support_bridge_customer.py:0
+msgid ""
+"Support Bridge remote contact — auto-created to represent a real person on "
+"the customer side."
+msgstr ""
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_customer__channel_id
+msgid "Support Channel"
+msgstr ""
+
+#. module: support_bridge_hub
+#: model:ir.ui.menu,name:support_bridge_hub.menu_support_bridge_customer_root
+#: model_terms:ir.ui.view,arch_db:support_bridge_hub.view_company_form_inherit_support_bridge
+msgid "Support Hub"
+msgstr ""
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,field_description:support_bridge_hub.field_res_company__support_bridge_parent_channel_id
+msgid "Support Parent Channel"
+msgstr ""
+
+#. module: support_bridge_hub
+#: model_terms:ir.ui.view,arch_db:support_bridge_hub.view_support_bridge_customer_form
+msgid "Team"
+msgstr ""
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,help:support_bridge_hub.field_support_bridge_customer__name
+msgid ""
+"The customer company's display name — replaced automatically with the "
+"customer's own company name the first time they connect."
+msgstr ""
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,help:support_bridge_hub.field_support_bridge_customer__channel_id
+msgid ""
+"This customer's dedicated Discuss channel, nested under the shared Support "
+"parent channel."
+msgstr ""
+
+#. module: support_bridge_hub
+#. odoo-python
+#: code:addons/support_bridge_hub/models/support_bridge_customer.py:0
+msgid "Unknown"
+msgstr ""
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,help:support_bridge_hub.field_res_partner__support_bridge_hub_remote_id
+#: model:ir.model.fields,help:support_bridge_hub.field_res_users__support_bridge_hub_remote_id
+msgid ""
+"Which person on the customer's side this auto-created contact mirrors. "
+"Contacts are matched on this id — never on the name, because two people can "
+"share a name and a person can be renamed."
+msgstr ""

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="view_support_bridge_customer_list" model="ir.ui.view">
+        <field name="name">support.bridge.customer.list</field>
+        <field name="model">support.bridge.customer</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="agent_user_ids" widget="many2many_tags"/>
+                <field name="last_seen"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_support_bridge_customer_form" model="ir.ui.view">
+        <field name="name">support.bridge.customer.form</field>
+        <field name="model">support.bridge.customer</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_open_channel" string="Open Channel" type="object"
+                            class="btn-primary" invisible="not channel_id"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="Customer company name"/></h1>
+                    </div>
+                    <group>
+                        <group string="Connection">
+                            <field name="api_key"/>
+                            <field name="active"/>
+                        </group>
+                        <group string="Team">
+                            <field name="agent_user_ids" widget="many2many_tags"/>
+                            <field name="last_seen"/>
+                        </group>
+                    </group>
+                    <group string="Linked Records" invisible="not partner_id">
+                        <field name="partner_id" readonly="1"/>
+                        <field name="channel_id" readonly="1"/>
+                        <field name="client_public_url" readonly="1"
+                               placeholder="Not reachable — relies on their own polling"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_support_bridge_customer" model="ir.actions.act_window">
+        <field name="name">Customer Connections</field>
+        <field name="res_model">support.bridge.customer</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'active_test': False}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Connect your first customer</p>
+            <p>Creates a contact and a Discuss channel for this customer automatically.
+               Give the generated API Key and this server's address to the customer so
+               they can connect from their own Support Bridge Client settings.</p>
+        </field>
+    </record>
+
+    <menuitem id="menu_support_bridge_customer_root"
+              name="Support Hub"
+              parent="base.next_id_2"
+              groups="base.group_system"
+              sequence="63"/>
+
+    <menuitem id="menu_support_bridge_customer"
+              name="Customer Connections"
+              parent="menu_support_bridge_customer_root"
+              action="action_support_bridge_customer"
+              sequence="1"/>
+
+</odoo>

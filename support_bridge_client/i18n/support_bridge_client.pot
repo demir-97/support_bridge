@@ -1,0 +1,427 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* support_bridge_client
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 19.0+e-20260630\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-08-28 12:26+0000\n"
+"PO-Revision-Date: 2026-08-28 12:26+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_connection__api_key
+msgid "API Key"
+msgstr ""
+
+#. module: support_bridge_client
+#. odoo-python
+#: code:addons/support_bridge_client/models/support_bridge_connection.py:0
+msgid "Attachment not delivered (size limit): %s"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_outbox__attempts
+msgid "Attempts"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_outbox__author_email
+msgid "Author Email"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_outbox__author_name
+msgid "Author Name"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_outbox__author_partner_id
+msgid "Author Partner"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields,help:support_bridge_client.field_support_bridge_connection__partner_id
+msgid ""
+"Auto-created contact representing your vendor; their replies are attributed "
+"to individual contacts nested under it."
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_outbox__body
+msgid "Body"
+msgstr ""
+
+#. module: support_bridge_client
+#: model_terms:ir.ui.view,arch_db:support_bridge_client.view_support_bridge_connection_form
+msgid "Connect"
+msgstr ""
+
+#. module: support_bridge_client
+#: model_terms:ir.actions.act_window,help:support_bridge_client.action_support_bridge_connection
+msgid "Connect to your vendor's support team"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields.selection,name:support_bridge_client.selection__support_bridge_connection__state__connected
+msgid "Connected"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_message_map__connection_id
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_outbox__connection_id
+msgid "Connection"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields.selection,name:support_bridge_client.selection__support_bridge_connection__state__error
+msgid "Connection Error"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model,name:support_bridge_client.model_res_partner
+msgid "Contact"
+msgstr ""
+
+#. module: support_bridge_client
+#. odoo-python
+#: code:addons/support_bridge_client/models/support_bridge_connection.py:0
+msgid "Could not reach the Hub at %(url)s: %(error)s"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_connection__create_uid
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_message_map__create_uid
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_outbox__create_uid
+msgid "Created by"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_connection__create_date
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_message_map__create_date
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_outbox__create_date
+msgid "Created on"
+msgstr ""
+
+#. module: support_bridge_client
+#: model_terms:ir.ui.view,arch_db:support_bridge_client.view_support_bridge_connection_form
+msgid "Delivery Mode"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_mail_message__display_name
+#: model:ir.model.fields,field_description:support_bridge_client.field_mail_message_reaction__display_name
+#: model:ir.model.fields,field_description:support_bridge_client.field_res_partner__display_name
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_connection__display_name
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_message_map__display_name
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_outbox__display_name
+msgid "Display Name"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields,help:support_bridge_client.field_support_bridge_connection__push_enabled
+msgid ""
+"Enable only if this Odoo instance has a public URL the vendor's server can "
+"reach directly (e.g. cloud/Odoo.sh hosting) — replies then arrive instantly "
+"instead of waiting for the next check. Leave off if this server is behind a "
+"firewall/NAT; background checking keeps working either way as the reliable "
+"fallback."
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields.selection,name:support_bridge_client.selection__support_bridge_outbox__state__failed
+msgid "Failed"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_connection__hub_url
+msgid "Hub URL"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_mail_message__id
+#: model:ir.model.fields,field_description:support_bridge_client.field_mail_message_reaction__id
+#: model:ir.model.fields,field_description:support_bridge_client.field_res_partner__id
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_connection__id
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_message_map__id
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_outbox__id
+msgid "ID"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields,help:support_bridge_client.field_support_bridge_connection__member_user_ids
+msgid "Internal users who can see and use this support channel."
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_connection__last_error
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_outbox__last_error
+msgid "Last Error"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_connection__last_poll_cursor
+msgid "Last Poll Cursor"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_connection__last_synced
+msgid "Last Synchronized"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_connection__write_uid
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_message_map__write_uid
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_outbox__write_uid
+msgid "Last Updated by"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_connection__write_date
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_message_map__write_date
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_outbox__write_date
+msgid "Last Updated on"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields,help:support_bridge_client.field_support_bridge_connection__last_synced
+msgid "Last time this connection checked the vendor's server for replies."
+msgstr ""
+
+#. module: support_bridge_client
+#: model_terms:ir.ui.view,arch_db:support_bridge_client.view_support_bridge_connection_form
+msgid "Linked Records"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_message_map__local_message_id
+msgid "Local Message"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model,name:support_bridge_client.model_mail_message
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_outbox__message_id
+msgid "Message"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model,name:support_bridge_client.model_mail_message_reaction
+msgid "Message Reaction"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_connection__public_url
+msgid "My Public URL"
+msgstr ""
+
+#. module: support_bridge_client
+#. odoo-python
+#: code:addons/support_bridge_client/models/support_bridge_connection.py:0
+msgid "New Connection"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields.selection,name:support_bridge_client.selection__support_bridge_connection__state__draft
+msgid "Not Connected"
+msgstr ""
+
+#. module: support_bridge_client
+#. odoo-python
+#: code:addons/support_bridge_client/models/support_bridge_connection.py:0
+msgid ""
+"Not delivered to %(vendor)s — attachments are limited to %(size)s MB per "
+"file and %(count)s files per message: %(names)s. Send a download link "
+"instead."
+msgstr ""
+
+#. module: support_bridge_client
+#: model_terms:ir.actions.act_window,help:support_bridge_client.action_support_bridge_connection
+msgid ""
+"Paste the Hub URL and API Key your vendor gave you, then click Connect."
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields,help:support_bridge_client.field_support_bridge_connection__api_key
+msgid "Paste the key your vendor generated for this connection."
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields.selection,name:support_bridge_client.selection__support_bridge_outbox__state__pending
+msgid "Pending"
+msgstr ""
+
+#. module: support_bridge_client
+#. odoo-python
+#: code:addons/support_bridge_client/models/support_bridge_connection.py:0
+msgid "Please fill in both the Hub URL and the API Key."
+msgstr ""
+
+#. module: support_bridge_client
+#. odoo-python
+#: code:addons/support_bridge_client/models/support_bridge_connection.py:0
+msgid "Please fill in your Public URL, or disable Publicly Reachable."
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_connection__push_enabled
+msgid "Publicly Reachable"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_message_map__remote_message_id
+msgid "Remote Message"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields.selection,name:support_bridge_client.selection__support_bridge_outbox__state__sent
+msgid "Sent"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_outbox__state
+msgid "State"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_connection__state
+msgid "Status"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model,name:support_bridge_client.model_support_bridge_connection
+msgid "Support Bridge Connection"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model,name:support_bridge_client.model_support_bridge_message_map
+msgid "Support Bridge Local/Remote Message Map"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model,name:support_bridge_client.model_support_bridge_outbox
+msgid "Support Bridge Outbound Message Queue"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_res_partner__support_bridge_client_remote_id
+#: model:ir.model.fields,field_description:support_bridge_client.field_res_users__support_bridge_client_remote_id
+msgid "Support Bridge Remote Contact"
+msgstr ""
+
+#. module: support_bridge_client
+#. odoo-python
+#: code:addons/support_bridge_client/models/support_bridge_connection.py:0
+msgid ""
+"Support Bridge remote contact — auto-created to represent a real person on "
+"the Hub side."
+msgstr ""
+
+#. module: support_bridge_client
+#. odoo-python
+#: code:addons/support_bridge_client/models/support_bridge_connection.py:0
+msgid "Support Bridge vendor persona — do not merge or delete."
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.actions.server,name:support_bridge_client.ir_cron_support_bridge_poll_ir_actions_server
+msgid "Support Bridge: poll Hub for replies"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.actions.server,name:support_bridge_client.ir_cron_support_bridge_retry_ir_actions_server
+msgid "Support Bridge: retry failed outbound messages"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_connection__channel_id
+msgid "Support Channel"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_connection__member_user_ids
+#: model_terms:ir.ui.view,arch_db:support_bridge_client.view_support_bridge_connection_form
+msgid "Team"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields,help:support_bridge_client.field_support_bridge_connection__channel_id
+msgid "The Discuss channel where you chat with your vendor's support team."
+msgstr ""
+
+#. module: support_bridge_client
+#. odoo-python
+#: code:addons/support_bridge_client/models/support_bridge_connection.py:0
+msgid "The Hub rejected the connection (HTTP %s). Check the API Key."
+msgstr ""
+
+#. module: support_bridge_client
+#. odoo-python
+#: code:addons/support_bridge_client/models/support_bridge_connection.py:0
+msgid "The Hub rejected the connection: %s"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields,help:support_bridge_client.field_support_bridge_connection__hub_url
+msgid ""
+"The support server address your vendor gave you, e.g. "
+"https://support.yourvendor.com"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields,help:support_bridge_client.field_support_bridge_connection__public_url
+msgid ""
+"This instance's own public base URL, e.g. https://mycompany.odoo.com — "
+"required when Publicly Reachable is enabled."
+msgstr ""
+
+#. module: support_bridge_client
+#. odoo-python
+#: code:addons/support_bridge_client/models/support_bridge_connection.py:0
+msgid "Unknown"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_connection__name
+msgid "Vendor"
+msgstr ""
+
+#. module: support_bridge_client
+#: model_terms:ir.ui.view,arch_db:support_bridge_client.view_support_bridge_connection_form
+msgid "Vendor Connection"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_connection__partner_id
+msgid "Vendor Contact"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.actions.act_window,name:support_bridge_client.action_support_bridge_connection
+#: model:ir.ui.menu,name:support_bridge_client.menu_support_bridge_connection
+msgid "Vendor Support"
+msgstr ""
+
+#. module: support_bridge_client
+#: model:ir.model.fields,help:support_bridge_client.field_res_partner__support_bridge_client_remote_id
+#: model:ir.model.fields,help:support_bridge_client.field_res_users__support_bridge_client_remote_id
+msgid ""
+"Which person on the vendor's side this auto-created contact mirrors. "
+"Contacts are matched on this id — never on the name, because two people can "
+"share a name and a person can be renamed."
+msgstr ""
+
+#. module: support_bridge_client
+#: model_terms:ir.ui.view,arch_db:support_bridge_client.view_support_bridge_connection_form
+msgid "https://mycompany.odoo.com"
+msgstr ""
+
+#. module: support_bridge_client
+#: model_terms:ir.ui.view,arch_db:support_bridge_client.view_support_bridge_connection_form
+msgid "https://support.yourvendor.com"
+msgstr ""

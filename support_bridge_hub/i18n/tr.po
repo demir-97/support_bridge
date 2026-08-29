@@ -1,0 +1,362 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* support_bridge_hub
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 19.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-08-27 19:55+0000\n"
+"PO-Revision-Date: 2026-08-27 19:55+0000\n"
+"Last-Translator: CodeQuarters\n"
+"Language-Team: \n"
+"Language: tr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_customer__api_key
+msgid "API Key"
+msgstr "API Anahtarı"
+
+#. module: support_bridge_hub
+#. odoo-python
+#: code:addons/support_bridge_hub/controllers/main.py:0
+msgid "Attachment not delivered (size limit): %s"
+msgstr "Ek iletilmedi (boyut sınırı): %s"
+
+#. module: support_bridge_hub
+#: model:ir.model,name:support_bridge_hub.model_res_partner
+msgid "Contact"
+msgstr "Kontak"
+
+#. module: support_bridge_hub
+#. odoo-python
+#: code:addons/support_bridge_hub/models/support_bridge_customer.py:0
+msgid ""
+"Not delivered to %(customer)s — attachments are limited to %(size)s MB per "
+"file and %(count)s files per message: %(names)s. Send a download link "
+"instead."
+msgstr ""
+"%(customer)s tarafına iletilmedi — ekler dosya başına %(size)s MB ve mesaj "
+"başına %(count)s dosya ile sınırlıdır: %(names)s. Bunun yerine indirme "
+"bağlantısı gönderin."
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,field_description:support_bridge_hub.field_res_partner__support_bridge_hub_remote_id
+msgid "Support Bridge Remote Contact"
+msgstr "Support Bridge Uzak Kontağı"
+
+#. module: support_bridge_hub
+#. odoo-python
+#: code:addons/support_bridge_hub/models/support_bridge_customer.py:0
+msgid "Unknown"
+msgstr "Bilinmiyor"
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,help:support_bridge_hub.field_res_partner__support_bridge_hub_remote_id
+msgid ""
+"Which person on the customer's side this auto-created contact mirrors. "
+"Contacts are matched on this id — never on the name, because two people can "
+"share a name and a person can be renamed."
+msgstr ""
+"Bu otomatik kontağın, müşteri tarafındaki hangi kişiyi yansıttığını belirtir. "
+"Kontaklar bu kimlik üzerinden eşleştirilir — asla ad üzerinden değil, çünkü "
+"iki kişi aynı adı taşıyabilir ve bir kişinin adı değişebilir."
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_customer__active
+msgid "Active"
+msgstr "Aktif"
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_customer__agent_user_ids
+msgid "Agents"
+msgstr "Temsilciler"
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,help:support_bridge_hub.field_support_bridge_customer__active
+msgid ""
+"Archive a customer to block their access without deleting the chat history."
+msgstr ""
+"Bir müşteriyi arşivleyerek sohbet geçmişini silmeden erişimini "
+"engelleyebilirsiniz."
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,help:support_bridge_hub.field_support_bridge_customer__partner_id
+msgid ""
+"Auto-created contact representing the customer's company; relayed messages "
+"are attributed to individual contacts nested under it."
+msgstr ""
+"Müşteri şirketini temsil eden otomatik oluşturulmuş kontak; iletilen "
+"mesajlar bunun altındaki kişi kontaklarına atfedilir."
+
+#. module: support_bridge_hub
+#: model:ir.model,name:support_bridge_hub.model_res_company
+msgid "Companies"
+msgstr "Şirketler"
+
+#. module: support_bridge_hub
+#: model_terms:ir.actions.act_window,help:support_bridge_hub.action_support_bridge_customer
+msgid "Connect your first customer"
+msgstr "İlk müşterinizi bağlayın"
+
+#. module: support_bridge_hub
+#: model_terms:ir.ui.view,arch_db:support_bridge_hub.view_support_bridge_customer_form
+msgid "Connection"
+msgstr "Bağlantı"
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_customer__create_uid
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_event__create_uid
+msgid "Created by"
+msgstr "Oluşturan"
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_customer__create_date
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_event__create_date
+msgid "Created on"
+msgstr "Oluşturulma Tarihi"
+
+#. module: support_bridge_hub
+#: model_terms:ir.actions.act_window,help:support_bridge_hub.action_support_bridge_customer
+msgid ""
+"Creates a contact and a Discuss channel for this customer automatically.\n"
+"               Give the generated API Key and this server's address to the customer so\n"
+"               they can connect from their own Support Bridge Client settings."
+msgstr ""
+"Bu müşteri için otomatik olarak bir kontak ve Discuss kanalı oluşturur.\n"
+"               Oluşturulan API Anahtarını ve bu sunucunun adresini müşteriye iletin;\n"
+"               müşteri bunları kendi Support Bridge Client ayarlarına girerek bağlanır."
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_customer__name
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_event__customer_id
+msgid "Customer"
+msgstr "Müşteri"
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_customer__partner_id
+msgid "Customer Contact"
+msgstr "Müşteri Kontağı"
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_customer__client_public_url
+msgid "Customer Public URL"
+msgstr "Müşteri Genel URL'si"
+
+#. module: support_bridge_hub
+#: model_terms:ir.ui.view,arch_db:support_bridge_hub.view_support_bridge_customer_form
+msgid "Customer company name"
+msgstr "Müşteri şirket adı"
+
+#. module: support_bridge_hub
+#: model:ir.actions.act_window,name:support_bridge_hub.action_support_bridge_customer
+#: model:ir.ui.menu,name:support_bridge_hub.menu_support_bridge_customer
+msgid "Customer Connections"
+msgstr "Müşteri Bağlantıları"
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,field_description:support_bridge_hub.field_mail_message__display_name
+#: model:ir.model.fields,field_description:support_bridge_hub.field_mail_message_reaction__display_name
+#: model:ir.model.fields,field_description:support_bridge_hub.field_res_company__display_name
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_customer__display_name
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_event__display_name
+msgid "Display Name"
+msgstr "Görünen Ad"
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_event__event_type
+msgid "Event Type"
+msgstr "Olay Türü"
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,help:support_bridge_hub.field_res_company__support_bridge_parent_channel_id
+msgid ""
+"Every customer's support channel is created as a sub-channel of this one, so"
+" they all appear neatly grouped in Discuss. Leave empty to auto-create one "
+"the first time a customer connects."
+msgstr ""
+"Her müşterinin destek kanalı bu kanalın alt kanalı olarak oluşturulur; "
+"böylece hepsi Discuss'ta düzenli şekilde gruplanır. Boş bırakılırsa ilk "
+"müşteri bağlandığında otomatik oluşturulur."
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,help:support_bridge_hub.field_support_bridge_customer__api_key
+msgid ""
+"Hand this key, together with this server's address, to the customer — they "
+"paste both into their Support Bridge Client settings to connect."
+msgstr ""
+"Bu anahtarı, bu sunucunun adresiyle birlikte müşteriye iletin — müşteri her "
+"ikisini kendi Support Bridge Client ayarlarına yapıştırarak bağlanır."
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,field_description:support_bridge_hub.field_mail_message__id
+#: model:ir.model.fields,field_description:support_bridge_hub.field_mail_message_reaction__id
+#: model:ir.model.fields,field_description:support_bridge_hub.field_res_company__id
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_customer__id
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_event__id
+msgid "ID"
+msgstr "ID"
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,help:support_bridge_hub.field_support_bridge_customer__agent_user_ids
+msgid ""
+"Internal users who can see and reply in this customer's support channel."
+msgstr ""
+"Bu müşterinin destek kanalını görebilen ve yanıt yazabilen dahili "
+"kullanıcılar."
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_customer__last_seen
+msgid "Last Contact"
+msgstr "Son İletişim"
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_customer__write_uid
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_event__write_uid
+msgid "Last Updated by"
+msgstr "Son Güncelleyen"
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_customer__write_date
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_event__write_date
+msgid "Last Updated on"
+msgstr "Son Güncelleme Tarihi"
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,help:support_bridge_hub.field_support_bridge_customer__last_seen
+msgid "Last time the customer's Odoo reached this server."
+msgstr "Müşterinin Odoo'sunun bu sunucuya en son ulaştığı zaman."
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,help:support_bridge_hub.field_support_bridge_customer__client_public_url
+msgid ""
+"Learned from the customer's own connection settings when they enable "
+"'Publicly Reachable' on their side — used to push replies to them instantly."
+" Empty means they rely on their own polling only (e.g. behind a firewall)."
+msgstr ""
+"Müşteri kendi tarafında 'Genel Erişilebilir' seçeneğini etkinleştirdiğinde "
+"bağlantı ayarlarından öğrenilir — yanıtları anında iletmek için kullanılır. "
+"Boşsa müşteri yalnızca kendi periyodik kontrolüne güveniyor demektir (örn. "
+"güvenlik duvarı arkasında)."
+
+#. module: support_bridge_hub
+#: model_terms:ir.ui.view,arch_db:support_bridge_hub.view_support_bridge_customer_form
+msgid "Linked Records"
+msgstr "Bağlı Kayıtlar"
+
+#. module: support_bridge_hub
+#: model:ir.model,name:support_bridge_hub.model_mail_message
+#: model:ir.model.fields.selection,name:support_bridge_hub.selection__support_bridge_event__event_type__message
+msgid "Message"
+msgstr "Mesaj"
+
+#. module: support_bridge_hub
+#: model:ir.model,name:support_bridge_hub.model_mail_message_reaction
+msgid "Message Reaction"
+msgstr "Mesaj Tepkisi"
+
+#. module: support_bridge_hub
+#. odoo-python
+#: code:addons/support_bridge_hub/models/support_bridge_customer.py:0
+msgid "New Connection"
+msgstr "Yeni Bağlantı"
+
+#. module: support_bridge_hub
+#: model_terms:ir.ui.view,arch_db:support_bridge_hub.view_support_bridge_customer_form
+msgid "Not reachable — relies on their own polling"
+msgstr "Erişilebilir değil — kendi periyodik kontrolünü kullanıyor"
+
+#. module: support_bridge_hub
+#: model_terms:ir.ui.view,arch_db:support_bridge_hub.view_support_bridge_customer_form
+msgid "Open Channel"
+msgstr "Kanalı Aç"
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_event__payload
+msgid "Payload"
+msgstr "Veri İçeriği"
+
+#. module: support_bridge_hub
+#: model:ir.model.fields.selection,name:support_bridge_hub.selection__support_bridge_event__event_type__reaction_add
+msgid "Reaction Added"
+msgstr "Tepki Eklendi"
+
+#. module: support_bridge_hub
+#: model:ir.model.fields.selection,name:support_bridge_hub.selection__support_bridge_event__event_type__reaction_remove
+msgid "Reaction Removed"
+msgstr "Tepki Kaldırıldı"
+
+#. module: support_bridge_hub
+#. odoo-python
+#: code:addons/support_bridge_hub/models/support_bridge_customer.py:0
+msgid "Support"
+msgstr "Destek"
+
+#. module: support_bridge_hub
+#: model:ir.model,name:support_bridge_hub.model_support_bridge_customer
+msgid "Support Bridge Customer Connection"
+msgstr "Support Bridge Müşteri Bağlantısı"
+
+#. module: support_bridge_hub
+#: model:ir.model,name:support_bridge_hub.model_support_bridge_event
+msgid "Support Bridge Outbound Event Queue"
+msgstr "Support Bridge Giden Olay Kuyruğu"
+
+#. module: support_bridge_hub
+#. odoo-python
+#: code:addons/support_bridge_hub/models/support_bridge_customer.py:0
+msgid "Support Bridge customer persona — do not merge or delete."
+msgstr "Support Bridge müşteri temsil kontağı — birleştirmeyin veya silmeyin."
+
+#. module: support_bridge_hub
+#. odoo-python
+#: code:addons/support_bridge_hub/models/support_bridge_customer.py:0
+msgid ""
+"Support Bridge remote contact — auto-created to represent a real person on "
+"the customer side."
+msgstr ""
+"Support Bridge uzak kontağı — müşteri tarafındaki gerçek bir kişiyi temsil "
+"etmek için otomatik oluşturuldu."
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,field_description:support_bridge_hub.field_support_bridge_customer__channel_id
+msgid "Support Channel"
+msgstr "Destek Kanalı"
+
+#. module: support_bridge_hub
+#: model:ir.ui.menu,name:support_bridge_hub.menu_support_bridge_customer_root
+#: model_terms:ir.ui.view,arch_db:support_bridge_hub.view_company_form_inherit_support_bridge
+msgid "Support Hub"
+msgstr "Destek Merkezi"
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,field_description:support_bridge_hub.field_res_company__support_bridge_parent_channel_id
+msgid "Support Parent Channel"
+msgstr "Destek Ana Kanalı"
+
+#. module: support_bridge_hub
+#: model_terms:ir.ui.view,arch_db:support_bridge_hub.view_support_bridge_customer_form
+msgid "Team"
+msgstr "Ekip"
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,help:support_bridge_hub.field_support_bridge_customer__name
+msgid ""
+"The customer company's display name — replaced automatically with the "
+"customer's own company name the first time they connect."
+msgstr ""
+"Müşteri şirketinin görünen adı — müşteri ilk kez bağlandığında kendi şirket "
+"adıyla otomatik olarak değiştirilir."
+
+#. module: support_bridge_hub
+#: model:ir.model.fields,help:support_bridge_hub.field_support_bridge_customer__channel_id
+msgid ""
+"This customer's dedicated Discuss channel, nested under the shared Support "
+"parent channel."
+msgstr ""
+"Bu müşteriye özel Discuss kanalı; ortak Destek ana kanalının altında yer "
+"alır."

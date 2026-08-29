@@ -1,0 +1,22 @@
+# Bu depo yalnizca Support Bridge modul ciftini yayinlar.
+#
+# Bu klasor ayni zamanda baska (ucretli) modullerin de calisma dizini oldugu
+# icin once KOK ALTINDAKI HER SEY haric tutulur, sonra sadece bu urune ait
+# yollar geri alinir. Boylece klasore eklenen yeni bir modul, biri onu acikca
+# buraya eklemedigi surece kazara herkese acik depoya dusemez.
+/*
+
+!.gitignore
+!README.md
+!LICENSE
+!SUPPORT_BRIDGE_DOKUMANTASYON.md
+!SUPPORT_BRIDGE_DOKUMANTASYON.html
+!support_bridge_hub/
+!support_bridge_client/
+
+# Modullerin icindeki derleme/calisma artiklari
+__pycache__/
+*.py[cod]
+*.mo
+*.swp
+.DS_Store

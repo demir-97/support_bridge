@@ -1,0 +1,448 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* support_bridge_client
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 19.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-08-27 19:54+0000\n"
+"PO-Revision-Date: 2026-08-27 19:54+0000\n"
+"Last-Translator: CodeQuarters\n"
+"Language-Team: \n"
+"Language: tr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_connection__api_key
+msgid "API Key"
+msgstr "API Anahtarı"
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_outbox__attempts
+msgid "Attempts"
+msgstr "Deneme Sayısı"
+
+#. module: support_bridge_client
+#. odoo-python
+#: code:addons/support_bridge_client/models/support_bridge_connection.py:0
+msgid "Attachment not delivered (size limit): %s"
+msgstr "Ek iletilmedi (boyut sınırı): %s"
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_outbox__author_email
+msgid "Author Email"
+msgstr "Yazar E-postası"
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_outbox__author_name
+msgid "Author Name"
+msgstr "Yazar Adı"
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_outbox__author_partner_id
+msgid "Author Partner"
+msgstr "Yazar Kontağı"
+
+#. module: support_bridge_client
+#: model:ir.model,name:support_bridge_client.model_res_partner
+msgid "Contact"
+msgstr "Kontak"
+
+#. module: support_bridge_client
+#. odoo-python
+#: code:addons/support_bridge_client/models/support_bridge_connection.py:0
+msgid ""
+"Not delivered to %(vendor)s — attachments are limited to %(size)s MB per file"
+" and %(count)s files per message: %(names)s. Send a download link instead."
+msgstr ""
+"%(vendor)s tarafına iletilmedi — ekler dosya başına %(size)s MB ve mesaj "
+"başına %(count)s dosya ile sınırlıdır: %(names)s. Bunun yerine indirme "
+"bağlantısı gönderin."
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_res_partner__support_bridge_client_remote_id
+msgid "Support Bridge Remote Contact"
+msgstr "Support Bridge Uzak Kontağı"
+
+#. module: support_bridge_client
+#. odoo-python
+#: code:addons/support_bridge_client/models/support_bridge_connection.py:0
+msgid "Unknown"
+msgstr "Bilinmiyor"
+
+#. module: support_bridge_client
+#: model:ir.model.fields,help:support_bridge_client.field_res_partner__support_bridge_client_remote_id
+msgid ""
+"Which person on the vendor's side this auto-created contact mirrors. Contacts"
+" are matched on this id — never on the name, because two people can share a "
+"name and a person can be renamed."
+msgstr ""
+"Bu otomatik kontağın, tedarikçi tarafındaki hangi kişiyi yansıttığını "
+"belirtir. Kontaklar bu kimlik üzerinden eşleştirilir — asla ad üzerinden "
+"değil, çünkü iki kişi aynı adı taşıyabilir ve bir kişinin adı değişebilir."
+
+#. module: support_bridge_client
+#: model:ir.model.fields,help:support_bridge_client.field_support_bridge_connection__partner_id
+msgid ""
+"Auto-created contact representing your vendor; their replies are attributed "
+"to individual contacts nested under it."
+msgstr ""
+"Tedarikçinizi temsil eden otomatik oluşturulmuş kontak; yanıtları bunun "
+"altındaki kişi kontaklarına atfedilir."
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_outbox__body
+msgid "Body"
+msgstr "İçerik"
+
+#. module: support_bridge_client
+#: model_terms:ir.ui.view,arch_db:support_bridge_client.view_support_bridge_connection_form
+msgid "Connect"
+msgstr "Bağlan"
+
+#. module: support_bridge_client
+#: model_terms:ir.actions.act_window,help:support_bridge_client.action_support_bridge_connection
+msgid "Connect to your vendor's support team"
+msgstr "Tedarikçinizin destek ekibine bağlanın"
+
+#. module: support_bridge_client
+#: model:ir.model.fields.selection,name:support_bridge_client.selection__support_bridge_connection__state__connected
+msgid "Connected"
+msgstr "Bağlı"
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_message_map__connection_id
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_outbox__connection_id
+msgid "Connection"
+msgstr "Bağlantı"
+
+#. module: support_bridge_client
+#: model:ir.model.fields.selection,name:support_bridge_client.selection__support_bridge_connection__state__error
+msgid "Connection Error"
+msgstr "Bağlantı Hatası"
+
+#. module: support_bridge_client
+#. odoo-python
+#: code:addons/support_bridge_client/models/support_bridge_connection.py:0
+msgid "Could not reach the Hub at %(url)s: %(error)s"
+msgstr "%(url)s adresindeki sunucuya ulaşılamadı: %(error)s"
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_connection__create_uid
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_message_map__create_uid
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_outbox__create_uid
+msgid "Created by"
+msgstr "Oluşturan"
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_connection__create_date
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_message_map__create_date
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_outbox__create_date
+msgid "Created on"
+msgstr "Oluşturulma Tarihi"
+
+#. module: support_bridge_client
+#: model_terms:ir.ui.view,arch_db:support_bridge_client.view_support_bridge_connection_form
+msgid "Delivery Mode"
+msgstr "Teslimat Modu"
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_mail_message__display_name
+#: model:ir.model.fields,field_description:support_bridge_client.field_mail_message_reaction__display_name
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_connection__display_name
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_message_map__display_name
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_outbox__display_name
+msgid "Display Name"
+msgstr "Görünen Ad"
+
+#. module: support_bridge_client
+#: model:ir.model.fields,help:support_bridge_client.field_support_bridge_connection__push_enabled
+msgid ""
+"Enable only if this Odoo instance has a public URL the vendor's server can "
+"reach directly (e.g. cloud/Odoo.sh hosting) — replies then arrive instantly "
+"instead of waiting for the next check. Leave off if this server is behind a "
+"firewall/NAT; background checking keeps working either way as the reliable "
+"fallback."
+msgstr ""
+"Yalnızca bu Odoo örneğinin, tedarikçi sunucusunun doğrudan erişebileceği "
+"genel bir URL'si varsa etkinleştirin (örn. bulut/Odoo.sh barındırma) — "
+"yanıtlar bir sonraki kontrolü beklemek yerine anında gelir. Bu sunucu "
+"güvenlik duvarı/NAT arkasındaysa kapalı bırakın; arka plan kontrolü her "
+"durumda güvenilir yedek olarak çalışmaya devam eder."
+
+#. module: support_bridge_client
+#: model:ir.model.fields.selection,name:support_bridge_client.selection__support_bridge_outbox__state__failed
+msgid "Failed"
+msgstr "Başarısız"
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_connection__hub_url
+msgid "Hub URL"
+msgstr "Hub URL'si"
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_mail_message__id
+#: model:ir.model.fields,field_description:support_bridge_client.field_mail_message_reaction__id
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_connection__id
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_message_map__id
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_outbox__id
+msgid "ID"
+msgstr "ID"
+
+#. module: support_bridge_client
+#: model:ir.model.fields,help:support_bridge_client.field_support_bridge_connection__member_user_ids
+msgid "Internal users who can see and use this support channel."
+msgstr "Bu destek kanalını görebilen ve kullanabilen dahili kullanıcılar."
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_connection__last_error
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_outbox__last_error
+msgid "Last Error"
+msgstr "Son Hata"
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_connection__last_poll_cursor
+msgid "Last Poll Cursor"
+msgstr "Son Kontrol İmleci"
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_connection__last_synced
+msgid "Last Synchronized"
+msgstr "Son Eşitleme"
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_connection__write_uid
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_message_map__write_uid
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_outbox__write_uid
+msgid "Last Updated by"
+msgstr "Son Güncelleyen"
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_connection__write_date
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_message_map__write_date
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_outbox__write_date
+msgid "Last Updated on"
+msgstr "Son Güncelleme Tarihi"
+
+#. module: support_bridge_client
+#: model:ir.model.fields,help:support_bridge_client.field_support_bridge_connection__last_synced
+msgid "Last time this connection checked the vendor's server for replies."
+msgstr ""
+"Bu bağlantının tedarikçi sunucusunu yanıtlar için en son kontrol ettiği "
+"zaman."
+
+#. module: support_bridge_client
+#: model_terms:ir.ui.view,arch_db:support_bridge_client.view_support_bridge_connection_form
+msgid "Linked Records"
+msgstr "Bağlı Kayıtlar"
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_message_map__local_message_id
+msgid "Local Message"
+msgstr "Yerel Mesaj"
+
+#. module: support_bridge_client
+#: model:ir.model,name:support_bridge_client.model_mail_message
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_outbox__message_id
+msgid "Message"
+msgstr "Mesaj"
+
+#. module: support_bridge_client
+#: model:ir.model,name:support_bridge_client.model_mail_message_reaction
+msgid "Message Reaction"
+msgstr "Mesaj Tepkisi"
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_connection__public_url
+msgid "My Public URL"
+msgstr "Genel URL'im"
+
+#. module: support_bridge_client
+#. odoo-python
+#: code:addons/support_bridge_client/models/support_bridge_connection.py:0
+msgid "New Connection"
+msgstr "Yeni Bağlantı"
+
+#. module: support_bridge_client
+#: model:ir.model.fields.selection,name:support_bridge_client.selection__support_bridge_connection__state__draft
+msgid "Not Connected"
+msgstr "Bağlı Değil"
+
+#. module: support_bridge_client
+#: model_terms:ir.actions.act_window,help:support_bridge_client.action_support_bridge_connection
+msgid ""
+"Paste the Hub URL and API Key your vendor gave you, then click Connect."
+msgstr ""
+"Tedarikçinizin verdiği Hub URL'sini ve API Anahtarını yapıştırın, ardından "
+"Bağlan'a tıklayın."
+
+#. module: support_bridge_client
+#: model:ir.model.fields,help:support_bridge_client.field_support_bridge_connection__api_key
+msgid "Paste the key your vendor generated for this connection."
+msgstr "Tedarikçinizin bu bağlantı için oluşturduğu anahtarı yapıştırın."
+
+#. module: support_bridge_client
+#: model:ir.model.fields.selection,name:support_bridge_client.selection__support_bridge_outbox__state__pending
+msgid "Pending"
+msgstr "Bekliyor"
+
+#. module: support_bridge_client
+#. odoo-python
+#: code:addons/support_bridge_client/models/support_bridge_connection.py:0
+msgid "Please fill in both the Hub URL and the API Key."
+msgstr "Lütfen hem Hub URL'sini hem de API Anahtarını doldurun."
+
+#. module: support_bridge_client
+#. odoo-python
+#: code:addons/support_bridge_client/models/support_bridge_connection.py:0
+msgid "Please fill in your Public URL, or disable Publicly Reachable."
+msgstr ""
+"Lütfen Genel URL'nizi doldurun veya Genel Erişilebilir seçeneğini kapatın."
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_connection__push_enabled
+msgid "Publicly Reachable"
+msgstr "Genel Erişilebilir"
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_message_map__remote_message_id
+msgid "Remote Message"
+msgstr "Uzak Mesaj"
+
+#. module: support_bridge_client
+#: model:ir.model.fields.selection,name:support_bridge_client.selection__support_bridge_outbox__state__sent
+msgid "Sent"
+msgstr "Gönderildi"
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_outbox__state
+msgid "State"
+msgstr "Durum"
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_connection__state
+msgid "Status"
+msgstr "Durum"
+
+#. module: support_bridge_client
+#: model:ir.model,name:support_bridge_client.model_support_bridge_connection
+msgid "Support Bridge Connection"
+msgstr "Support Bridge Bağlantısı"
+
+#. module: support_bridge_client
+#: model:ir.model,name:support_bridge_client.model_support_bridge_message_map
+msgid "Support Bridge Local/Remote Message Map"
+msgstr "Support Bridge Yerel/Uzak Mesaj Eşlemesi"
+
+#. module: support_bridge_client
+#: model:ir.model,name:support_bridge_client.model_support_bridge_outbox
+msgid "Support Bridge Outbound Message Queue"
+msgstr "Support Bridge Giden Mesaj Kuyruğu"
+
+#. module: support_bridge_client
+#. odoo-python
+#: code:addons/support_bridge_client/models/support_bridge_connection.py:0
+msgid ""
+"Support Bridge remote contact — auto-created to represent a real person on "
+"the Hub side."
+msgstr ""
+"Support Bridge uzak kontağı — sunucu tarafındaki gerçek bir kişiyi temsil "
+"etmek için otomatik oluşturuldu."
+
+#. module: support_bridge_client
+#. odoo-python
+#: code:addons/support_bridge_client/models/support_bridge_connection.py:0
+msgid "Support Bridge vendor persona — do not merge or delete."
+msgstr ""
+"Support Bridge tedarikçi temsil kontağı — birleştirmeyin veya silmeyin."
+
+#. module: support_bridge_client
+#: model:ir.actions.server,name:support_bridge_client.ir_cron_support_bridge_poll_ir_actions_server
+msgid "Support Bridge: poll Hub for replies"
+msgstr "Support Bridge: yanıtlar için sunucuyu kontrol et"
+
+#. module: support_bridge_client
+#: model:ir.actions.server,name:support_bridge_client.ir_cron_support_bridge_retry_ir_actions_server
+msgid "Support Bridge: retry failed outbound messages"
+msgstr "Support Bridge: başarısız giden mesajları yeniden dene"
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_connection__channel_id
+msgid "Support Channel"
+msgstr "Destek Kanalı"
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_connection__member_user_ids
+#: model_terms:ir.ui.view,arch_db:support_bridge_client.view_support_bridge_connection_form
+msgid "Team"
+msgstr "Ekip"
+
+#. module: support_bridge_client
+#: model:ir.model.fields,help:support_bridge_client.field_support_bridge_connection__channel_id
+msgid "The Discuss channel where you chat with your vendor's support team."
+msgstr "Tedarikçinizin destek ekibiyle sohbet ettiğiniz Discuss kanalı."
+
+#. module: support_bridge_client
+#. odoo-python
+#: code:addons/support_bridge_client/models/support_bridge_connection.py:0
+msgid "The Hub rejected the connection (HTTP %s). Check the API Key."
+msgstr "Sunucu bağlantıyı reddetti (HTTP %s). API Anahtarını kontrol edin."
+
+#. module: support_bridge_client
+#. odoo-python
+#: code:addons/support_bridge_client/models/support_bridge_connection.py:0
+msgid "The Hub rejected the connection: %s"
+msgstr "Sunucu bağlantıyı reddetti: %s"
+
+#. module: support_bridge_client
+#: model:ir.model.fields,help:support_bridge_client.field_support_bridge_connection__hub_url
+msgid ""
+"The support server address your vendor gave you, e.g. "
+"https://support.yourvendor.com"
+msgstr ""
+"Tedarikçinizin verdiği destek sunucusu adresi, örn. "
+"https://support.yourvendor.com"
+
+#. module: support_bridge_client
+#: model:ir.model.fields,help:support_bridge_client.field_support_bridge_connection__public_url
+msgid ""
+"This instance's own public base URL, e.g. https://mycompany.odoo.com — "
+"required when Publicly Reachable is enabled."
+msgstr ""
+"Bu örneğin kendi genel taban URL'si, örn. https://sirketiniz.odoo.com — "
+"Genel Erişilebilir etkinken zorunludur."
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_connection__name
+msgid "Vendor"
+msgstr "Tedarikçi"
+
+#. module: support_bridge_client
+#: model:ir.actions.act_window,name:support_bridge_client.action_support_bridge_connection
+#: model:ir.ui.menu,name:support_bridge_client.menu_support_bridge_connection
+msgid "Vendor Support"
+msgstr "Tedarikçi Desteği"
+
+#. module: support_bridge_client
+#: model_terms:ir.ui.view,arch_db:support_bridge_client.view_support_bridge_connection_form
+msgid "Vendor Connection"
+msgstr "Tedarikçi Bağlantısı"
+
+#. module: support_bridge_client
+#: model:ir.model.fields,field_description:support_bridge_client.field_support_bridge_connection__partner_id
+msgid "Vendor Contact"
+msgstr "Tedarikçi Kontağı"
+
+#. module: support_bridge_client
+#: model_terms:ir.ui.view,arch_db:support_bridge_client.view_support_bridge_connection_form
+msgid "https://mycompany.odoo.com"
+msgstr "https://sirketiniz.odoo.com"
+
+#. module: support_bridge_client
+#: model_terms:ir.ui.view,arch_db:support_bridge_client.view_support_bridge_connection_form
+msgid "https://support.yourvendor.com"
+msgstr "https://destek.tedarikciniz.com"

@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_support_bridge_connection_system,support.bridge.connection.system,model_support_bridge_connection,base.group_system,1,1,1,1
+access_support_bridge_outbox_system,support.bridge.outbox.system,model_support_bridge_outbox,base.group_system,1,1,1,1
+access_support_bridge_message_map_system,support.bridge.message.map.system,model_support_bridge_message_map,base.group_system,1,1,1,1
