@@ -35,8 +35,7 @@ class SupportBridgeClientController(http.Controller):
             # ile anlaşılmaz bir 500 hatasına dönüşmemeli; olayı kesin olarak
             # bir sonraki turda periyodik kontrolün atlama mantığı çözecek.
             _logger.exception(
-                'support_bridge_cli' \
-                'ent: gelen olay %s işlenemedi (bağlantı %s)',
+                'support_bridge_client: gelen olay %s işlenemedi (bağlantı %s)',
                 data.get('id'), connection.id)
             return request.make_json_response({'ok': False, 'error': 'delivery_failed'}, status=500)
         return request.make_json_response({'ok': True})
