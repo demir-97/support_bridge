@@ -51,6 +51,22 @@
                         <field name="partner_id" readonly="1"/>
                         <field name="channel_id" readonly="1"/>
                     </group>
+                    <notebook invisible="state != 'connected'">
+                        <page string="Projects" name="projects">
+                            <field name="project_ids" readonly="1">
+                                <list decoration-muted="not active">
+                                    <field name="name"/>
+                                    <field name="team_name"/>
+                                    <field name="channel_id"/>
+                                    <field name="active" widget="boolean_toggle"/>
+                                </list>
+                            </field>
+                            <div class="text-muted mt-2">
+                                Your vendor decides which projects are shared here.
+                                Press Connect to pick up newly shared ones.
+                            </div>
+                        </page>
+                    </notebook>
                 </sheet>
             </form>
         </field>

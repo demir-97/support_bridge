@@ -41,18 +41,22 @@ class MailMessage(models.Model):
             lambda m: m.model == 'discuss.channel' and m.message_type == 'comment')
         if not channel_messages:
             return
-        connections = self.env['support.bridge.connection'].sudo().search([
+        # Yönlendirme proje alt kanalına göre: bir bayiyle birden çok proje
+        # yürüyebilir ve her birinin kendi kanalı vardır. Arşivlenmiş projeler
+        # dışarıda kalır, yani bayi jetonu iptal ettiğinde giden yol da durur.
+        projects = self.env['support.bridge.project'].sudo().search([
             ('channel_id', 'in', channel_messages.mapped('res_id')),
-            ('state', '=', 'connected'),
+            ('connection_id.state', '=', 'connected'),
         ])
-        if not connections:
+        if not projects:
             return
-        connection_by_channel = {c.channel_id.id: c for c in connections}
+        project_by_channel = {p.channel_id.id: p for p in projects}
         outbox_ids = []
         for message in channel_messages:
-            connection = connection_by_channel.get(message.res_id)
-            if not connection:
+            project = project_by_channel.get(message.res_id)
+            if not project:
                 continue
+            connection = project.connection_id
             if connection._is_remote_author(message.author_id):
                 continue  # sunucudan iletilmiş mesaj — asla geri yansıtma
             body = html2plaintext(message.body or '').strip()
@@ -60,6 +64,7 @@ class MailMessage(models.Model):
                 continue
             outbox = self.env['support.bridge.outbox'].sudo().create({
                 'connection_id': connection.id,
+                'project_id': project.id,
                 'message_id': message.id,
                 # Kimlik anahtarı partner id'sidir; ad ve e-posta yalnızca görünen bilgidir.
                 'author_partner_id': message.author_id.id,
@@ -71,7 +76,7 @@ class MailMessage(models.Model):
             # Sınırı aşan ekler iletilmez; gönderenin bunu bilmesi gerekir.
             skipped = connection._partition_attachments(message.attachment_ids)[1]
             if skipped:
-                connection._warn_skipped_attachments(skipped)
+                connection._warn_skipped_attachments(project.channel_id, skipped)
         if outbox_ids:
             dbname = self.env.cr.dbname
             self.env.cr.postcommit.add(

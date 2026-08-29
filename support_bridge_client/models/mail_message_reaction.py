@@ -7,9 +7,9 @@ class MailMessageReaction(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         reactions = super().create(vals_list)
-        for connection, remote_message_id, payload in reactions._support_bridge_events():
+        for connection, project, remote_message_id, payload in reactions._support_bridge_events():
             connection.send_reaction(
-                remote_message_id, payload['content'], 'add', payload['author_name'],
+                project.sudo().token, remote_message_id, payload['content'], 'add', payload['author_name'],
                 author_id=payload['author_id'], author_email=payload['author_email'])
         return reactions
 
@@ -17,9 +17,9 @@ class MailMessageReaction(models.Model):
         # Silmeden önce yakala — super() sonrası kayıtlar artık yok.
         events = self._support_bridge_events()
         res = super().unlink()
-        for connection, remote_message_id, payload in events:
+        for connection, project, remote_message_id, payload in events:
             connection.send_reaction(
-                remote_message_id, payload['content'], 'remove', payload['author_name'],
+                project.sudo().token, remote_message_id, payload['content'], 'remove', payload['author_name'],
                 author_id=payload['author_id'], author_email=payload['author_email'])
         return res
 
@@ -35,15 +35,18 @@ class MailMessageReaction(models.Model):
             lambda r: r.partner_id and r.message_id.model == 'discuss.channel')
         if not channel_reactions:
             return result
-        connections = self.env['support.bridge.connection'].sudo().search([
+        projects = self.env['support.bridge.project'].sudo().search([
             ('channel_id', 'in', channel_reactions.mapped('message_id.res_id')),
-            ('state', '=', 'connected'),
+            ('connection_id.state', '=', 'connected'),
         ])
-        connection_by_channel = {c.channel_id.id: c for c in connections}
+        project_by_channel = {p.channel_id.id: p for p in projects}
         map_model = self.env['support.bridge.message.map'].sudo()
         for reaction in channel_reactions:
-            connection = connection_by_channel.get(reaction.message_id.res_id)
-            if not connection or connection._is_remote_author(reaction.partner_id):
+            project = project_by_channel.get(reaction.message_id.res_id)
+            if not project:
+                continue
+            connection = project.connection_id
+            if connection._is_remote_author(reaction.partner_id):
                 continue
             map_row = map_model.search([
                 ('connection_id', '=', connection.id),
@@ -51,7 +54,7 @@ class MailMessageReaction(models.Model):
             ], limit=1)
             if not map_row:
                 continue
-            result.append((connection, map_row.remote_message_id, {
+            result.append((connection, project, map_row.remote_message_id, {
                 'content': reaction.content,
                 'author_id': reaction.partner_id.id,
                 'author_name': reaction.partner_id.name or '',

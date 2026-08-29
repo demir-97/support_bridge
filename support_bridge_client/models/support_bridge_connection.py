@@ -91,6 +91,12 @@ class SupportBridgeConnection(models.Model):
         string='My Public URL',
         help="This instance's own public base URL, e.g. https://mycompany.odoo.com — "
              "required when Publicly Reachable is enabled.")
+    project_ids = fields.One2many(
+        'support.bridge.project', 'connection_id', string='Projects',
+        context={'active_test': False},
+        help="The projects your vendor shares with you. Each has its own "
+             "chat channel under the vendor's group.",
+    )
 
     @api.depends('hub_url', 'partner_id.name')
     def _compute_name(self):
@@ -214,6 +220,10 @@ class SupportBridgeConnection(models.Model):
         else:
             self.channel_id.sudo().name = hub_name
         self.write({'state': 'connected', 'last_error': False})
+        # Bayinin projeleri ve alt kanalları el sıkışmada kurulur; her yeniden
+        # bağlanma listeyi tazeler, yani bayi yeni proje açtığında Connect'e
+        # basmak yeterlidir.
+        self.env['support.bridge.project']._sync_from_hub(self, data.get('projects'))
 
     def _get_or_create_remote_author(self, name, remote_id=None, email=None):
         """Sunucu tarafındaki gerçek yanıt yazarının burada kullanıcı hesabı
@@ -273,7 +283,7 @@ class SupportBridgeConnection(models.Model):
         return bool(partner) and (
             partner.id == self.partner_id.id or partner.parent_id.id == self.partner_id.id)
 
-    def send_message(self, text, author_name=None, attachments=None,
+    def send_message(self, project_token, text, author_name=None, attachments=None,
                      skipped_attachments=None, author_id=None, author_email=None):
         """Bir mesajı (metin ve/veya ekler) sunucuya gönderir. Asla hata
         fırlatmaz — çağıranlar (giden kuyruk yeniden deneme işi ve mesaj
@@ -291,6 +301,7 @@ class SupportBridgeConnection(models.Model):
             response = requests.post(
                 url, headers=self._headers(),
                 json={
+                    'project_token': project_token or '',
                     'text': text or '',
                     'author_id': author_id or 0,
                     'author_name': author_name or '',
@@ -313,13 +324,14 @@ class SupportBridgeConnection(models.Model):
             return False, data.get('error') or 'unknown_error', 0, status_code
         return True, False, data.get('hub_message_id') or 0, status_code
 
-    def send_reaction(self, remote_message_id, content, action, author_name=None,
-                      author_id=None, author_email=None):
+    def send_reaction(self, project_token, remote_message_id, content, action,
+                      author_name=None, author_id=None, author_email=None):
         """Bir emoji tepkisini (ekleme veya kaldırma) sunucuya iletir; commit sonrasında ve ayrı thread'de çalışır."""
         self.ensure_one()
         url = self.hub_url.rstrip('/') + '/support_bridge/reaction'
         headers = self._headers()
         payload = {
+            'project_token': project_token or '',
             'message_id': remote_message_id,
             'content': content,
             'action': action,
@@ -362,15 +374,15 @@ class SupportBridgeConnection(models.Model):
             })
         return result
 
-    def _warn_skipped_attachments(self, skipped):
+    def _warn_skipped_attachments(self, channel, skipped):
         """Gönderene, hangi eklerin karşı tarafa gitmediğini kanalın içinde
         söyler. Sessizce atlamak kullanıcıyı dosyanın ulaştığı yanılgısında
         bırakır. 'notification' tipinde gönderilir; köprü yalnızca 'comment'
         tipini ilettiği için bu uyarı karşı tarafa geçmez."""
         self.ensure_one()
-        if not skipped or not self.channel_id:
+        if not skipped or not channel:
             return
-        self.channel_id.sudo().message_post(
+        channel.sudo().message_post(
             body=_(
                 "Not delivered to %(vendor)s — attachments are limited to "
                 "%(size)s MB per file and %(count)s files per message: %(names)s. "
@@ -413,6 +425,19 @@ class SupportBridgeConnection(models.Model):
 
     def _deliver_message(self, item):
         self.ensure_one()
+        # Olay hangi projeye aitse o alt kanala yazılır. Bilinmeyen ya da
+        # arşivlenmiş bir jetonla gelen olay teslim edilmez; jetonu iptal
+        # edilmiş bir projenin konuşması burada da durur.
+        project = self.env['support.bridge.project']._find_by_token(
+            self, item.get('project_token'))
+        if not project or not project.active:
+            _logger.info(
+                'support_bridge_client: bilinmeyen proje jetonu, olay atlandı (bağlantı %s)',
+                self.id)
+            return
+        channel = project._ensure_channel()
+        if not channel:
+            return
         remote_message_id = item.get('message_id') or 0
         map_model = self.env['support.bridge.message.map'].sudo()
         if remote_message_id and map_model.search_count([
@@ -448,7 +473,7 @@ class SupportBridgeConnection(models.Model):
         if skipped:
             html_body += Markup('<p><em>%s</em></p>') % _(
                 "Attachment not delivered (size limit): %s", ', '.join(skipped))
-        message = self.channel_id.sudo().message_post(
+        message = channel.sudo().message_post(
             body=html_body,
             attachments=attachment_tuples,
             author_id=author_partner.id,

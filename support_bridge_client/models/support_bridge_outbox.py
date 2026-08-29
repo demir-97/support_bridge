@@ -30,6 +30,9 @@ class SupportBridgeOutbox(models.Model):
     _order = 'id'
 
     connection_id = fields.Many2one('support.bridge.connection', required=True, ondelete='cascade')
+    # Hangi projenin konusmasina ait; jeton gonderim aninda projeden okunur ki
+    # bayi jetonu yenilerse kuyrukta bekleyen satirlar da yeni jetonla gitsin.
+    project_id = fields.Many2one('support.bridge.project', required=True, ondelete='cascade', index=True)
     message_id = fields.Many2one('mail.message', ondelete='set null')
     # Karşı tarafın kontağı bu id ile eşleştirir; ad ve e-posta yalnızca
     # görünen bilgidir. message_id silinebildiği için yazar bilgisi burada
@@ -60,7 +63,7 @@ class SupportBridgeOutbox(models.Model):
         attachments = connection._serialize_attachments(source_attachments)
         skipped = connection._partition_attachments(source_attachments)[1]
         ok, error, hub_message_id, status_code = connection.send_message(
-            self.body, self.author_name, attachments, skipped,
+            self.project_id.sudo().token, self.body, self.author_name, attachments, skipped,
             author_id=self.author_partner_id.id, author_email=self.author_email)
         if ok:
             self.write({'state': 'sent', 'last_error': False, 'next_retry': False})
