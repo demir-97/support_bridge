@@ -14,7 +14,7 @@ class MailMessageReaction(models.Model):
         return reactions
 
     def unlink(self):
-        # Silmeden önce yakala — super() sonrası kayıtlar artık yok.
+        # Capture before deleting: after super() the records are gone.
         events = self._support_bridge_events()
         res = super().unlink()
         for connection, project, remote_message_id, payload in events:
@@ -24,12 +24,12 @@ class MailMessageReaction(models.Model):
         return res
 
     def _support_bridge_events(self):
-        """Bu taraftaki kendi kullanıcılarımızın, köprülenmiş mesajlara verdiği
-        tepkiler için [(connection, remote_message_id, payload)] döner.
-        Köprünün kendi uyguladığı tepkiler (tedarikçi temsil kontağı veya onun
-        kişi kontakları adına olanlar) dışarıda bırakılır; böylece dışarıdan
-        gelen bir tepki asla geri yansıtılmaz. Sunucu tarafında karşılığı
-        olmayan (hiç köprülenmemiş) mesajlara verilen tepkiler atlanır."""
+        """Return [(connection, project, remote_message_id, payload)] for
+        reactions our own users put on bridged messages. Reactions the bridge
+        itself applied -- those made as the vendor persona or a contact under
+        it -- are left out, so an incoming reaction is never echoed back.
+        Reactions on messages with no counterpart on the vendor's side are
+        skipped."""
         result = []
         channel_reactions = self.filtered(
             lambda r: r.partner_id and r.message_id.model == 'discuss.channel')

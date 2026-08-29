@@ -18,9 +18,9 @@ MAX_ATTACHMENTS_PER_MESSAGE = 20
 
 
 def _looks_internal(url):
-    """Hub'ın internet üzerinden ulaşamayacağı adresleri kabaca ayıklar.
-    Yalnızca uyarı üretmek için kullanılır: aynı yerel ağdaki bir hub böyle
-    bir adrese pekâlâ erişebilir, o yüzden bu asla engelleyici olmamalı."""
+    """Rough check for addresses the vendor cannot reach over the internet.
+    Used only to raise a warning: a vendor on the same local network can reach
+    such an address perfectly well, so this must never block anything."""
     host = (urlparse(url).hostname or '').lower()
     if host in ('localhost', '::1') or host.endswith('.local'):
         return True
@@ -37,7 +37,7 @@ def _fire_and_forget_post(url, headers, payload, timeout):
         try:
             requests.post(url, headers=headers, json=payload, timeout=timeout)
         except requests.exceptions.RequestException as e:
-            _logger.info('support_bridge_client: arka plan gönderimi başarısız %s: %s', url, e)
+            _logger.info('support_bridge_client: background send to %s failed: %s', url, e)
     threading.Thread(target=_send, daemon=True).start()
 
 
@@ -105,10 +105,10 @@ class SupportBridgeConnection(models.Model):
 
     @api.onchange('push_enabled')
     def _onchange_push_enabled(self):
-        """Kutu işaretlendiğinde adresi Odoo'nun kendi taban URL'i ile doldurur.
-        Alan düzenlenebilir kalır ve dolu bir değer asla ezilmez; amaç elle
-        yazımdaki hata riskini azaltmak — yanlış adres, mesaj içeriğinin ve API
-        anahtarının tanımadığımız bir sunucuya gönderilmesi demektir."""
+        """Fill the address from Odoo's own base URL when the box is ticked. The
+        field stays editable and an existing value is never overwritten. The
+        point is to cut the risk of a typo: a wrong address means the message
+        content and the API key go to a server we know nothing about."""
         if not self.push_enabled or self.public_url:
             return
         base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url') or ''
@@ -125,9 +125,9 @@ class SupportBridgeConnection(models.Model):
                     "replies still arrive either way.", self.public_url),
             }}
         if self.public_url.startswith('http://'):
-            # TLS'i sonlandıran bir proxy arkasında proxy_mode kapalıysa Odoo
-            # kendi adresini http sanır. Bu adrese yapılan gönderim genelde
-            # https'e yönlendirilir ve yönlendirmede POST düşer.
+            # Behind a TLS-terminating proxy without proxy_mode, Odoo thinks
+            # its own address is http. Posting there usually gets redirected to
+            # https, and the POST is dropped in the redirect.
             return {'warning': {
                 'title': _('Use https for this address'),
                 'message': _(
@@ -137,8 +137,8 @@ class SupportBridgeConnection(models.Model):
             }}
 
     def write(self, vals):
-        # Ekip listesi değişmeden önceki hali yakalanır; hangi kullanıcının
-        # listeden düştüğü ancak bu karşılaştırmayla bilinebilir.
+        # Capture the team list before it changes: only this comparison says
+        # which user dropped off it.
         previous = {}
         if 'member_user_ids' in vals:
             previous = {record.id: record.member_user_ids for record in self}
@@ -149,12 +149,12 @@ class SupportBridgeConnection(models.Model):
         return res
 
     def _sync_channel_members(self, previous_users=None):
-        """Ekip listesini kanal üyeliğiyle eşitler.
+        """Keep channel membership in step with the team list.
 
-        Kanal 'group' tipinde olduğu için erişim doğrudan üyeliğe bağlıdır —
-        listeden çıkarılan bir kullanıcının üyeliği de gerçekten kaldırılmalı,
-        aksi halde kanalı görmeye devam eder. Yalnızca listeden düşenler
-        çıkarılır; Discuss üzerinden elle davet edilmiş kişilere dokunulmaz.
+        The channel is of type 'group', so access is membership itself: a user
+        taken off the list has to actually lose membership or they keep seeing
+        the channel. Only those who dropped off are removed; anyone invited by
+        hand through Discuss is left alone.
         """
         self.ensure_one()
         if not self.channel_id:
@@ -220,17 +220,16 @@ class SupportBridgeConnection(models.Model):
         else:
             self.channel_id.sudo().name = hub_name
         self.write({'state': 'connected', 'last_error': False})
-        # Bayinin projeleri ve alt kanalları el sıkışmada kurulur; her yeniden
-        # bağlanma listeyi tazeler, yani bayi yeni proje açtığında Connect'e
-        # basmak yeterlidir.
+        # The vendor's projects and sub-channels are set up during the
+        # handshake, and every reconnect refreshes the list.
         self.env['support.bridge.project']._sync_from_hub(self, data.get('projects'))
 
     def _get_or_create_remote_author(self, name, remote_id=None, email=None):
-        """Sunucu tarafındaki gerçek yanıt yazarının burada kullanıcı hesabı
-        yoktur. Bu yüzden iletilen mesajlar, bu bağlantının tedarikçi temsil
-        kontağının altında açılan kişiye özel küçük kontaklara atfedilir —
-        temsil kontağının kendisine değil; böylece farklı temsilciler
-        Discuss'ta kendi adlarıyla görünür.
+        """The real author on the vendor's side has no user account here, so
+        relayed replies are attributed to a small per-person contact nested
+        under this connection's vendor persona rather than to the persona
+        itself. That way different agents show up in Discuss under their own
+        names.
         """
         self.ensure_one()
         name = (name or '').strip()
@@ -243,15 +242,15 @@ class SupportBridgeConnection(models.Model):
             contact = Partner.search(
                 domain + [('support_bridge_client_remote_id', '=', remote_id)], limit=1)
             if not contact and name:
-                # Kimlik taşımayan eski kontaklar (bu özellik öncesinde ada
-                # göre açılmış olanlar) ilk mesajda kimliğiyle eşleştirilir.
+                # Older contacts carry no id (they were created by name
+                # before this existed); adopt them on their first message.
                 contact = Partner.search(
                     domain + [('support_bridge_client_remote_id', '=', False),
                               ('name', '=', name)], limit=1)
                 if contact:
                     contact.support_bridge_client_remote_id = remote_id
         elif name:
-            # Karşı taraf henüz kimlik göndermiyor ise
+            # The far side sends no id yet -- fall back to the name.
             contact = Partner.search(
                 domain + [('name', '=', name)], limit=1)
 
@@ -276,25 +275,23 @@ class SupportBridgeConnection(models.Model):
         })
 
     def _is_remote_author(self, partner):
-        """`partner`, bu bağlantının tedarikçi temsil kontağı ya da onun
-        altında _get_or_create_remote_author tarafından açılmış kişi
-        kontaklarından biriyse True döner."""
+        """True when partner is this connection's vendor persona, or one of the
+        per-person contacts _get_or_create_remote_author opened under it."""
         self.ensure_one()
         return bool(partner) and (
             partner.id == self.partner_id.id or partner.parent_id.id == self.partner_id.id)
 
     def send_message(self, project_token, text, author_name=None, attachments=None,
                      skipped_attachments=None, author_id=None, author_email=None):
-        """Bir mesajı (metin ve/veya ekler) sunucuya gönderir. Asla hata
-        fırlatmaz — çağıranlar (giden kuyruk yeniden deneme işi ve mesaj
-        oluşturma kancası) sunucuya ulaşılamadığında da yerel olarak
-        çalışmaya devam etmelidir.
+        """Send a message (text and/or attachments) to the vendor. Never raises:
+        the callers -- the outbox retry job and the message-creation hook --
+        must keep working locally even when the vendor is unreachable.
 
-        (ok, error, hub_message_id, status_code) döner. status_code, karşı
-        taraftan bir HTTP yanıtı alınabildiyse onun kodudur, ağa hiç
-        çıkılamadıysa 0'dır. Çağıran hatanın kalıcı olup olmadığını bu sayıya
-        bakarak anlar; hata metni yalnızca kullanıcıya gösterilmek içindir ve
-        biçimi hiçbir mantığın dayanağı değildir."""
+        Returns (ok, error, hub_message_id, status_code). status_code is the
+        HTTP code when a response came back, and 0 when we never got onto the
+        network. The caller decides whether a failure is permanent from that
+        number; the error text is for showing to a person, and no logic may
+        depend on its shape."""
         self.ensure_one()
         url = self.hub_url.rstrip('/') + '/support_bridge/inbound'
         try:
@@ -317,8 +314,8 @@ class SupportBridgeConnection(models.Model):
         try:
             data = response.json()
         except ValueError:
-            # Araya giren bir proxy 200 ile HTML dönebilir; bu fonksiyon hata
-            # fırlatmamaya söz verdiği için burada da sessizce başarısız olur.
+            # A proxy in the middle can answer 200 with HTML. This function
+            # promised never to raise, so it fails softly here too.
             return False, 'invalid_json_response', 0, status_code
         if not data.get('ok'):
             return False, data.get('error') or 'unknown_error', 0, status_code
@@ -326,7 +323,8 @@ class SupportBridgeConnection(models.Model):
 
     def send_reaction(self, project_token, remote_message_id, content, action,
                       author_name=None, author_id=None, author_email=None):
-        """Bir emoji tepkisini (ekleme veya kaldırma) sunucuya iletir; commit sonrasında ve ayrı thread'de çalışır."""
+        """Relay an emoji reaction (added or removed) to the vendor, after commit
+        and on its own thread."""
         self.ensure_one()
         url = self.hub_url.rstrip('/') + '/support_bridge/reaction'
         headers = self._headers()
@@ -344,7 +342,7 @@ class SupportBridgeConnection(models.Model):
 
     @api.model
     def _partition_attachments(self, attachments):
-        """İletilecek ekler, iletilemeyeceklerin etiketleri"""
+        """Return (attachments to send, labels of the ones that cannot go)."""
         keep = self.env['ir.attachment']
         skipped = []
         for attachment in attachments:
@@ -359,7 +357,8 @@ class SupportBridgeConnection(models.Model):
 
     @api.model
     def _serialize_attachments(self, attachments):
-        """ir.attachment kayıtlarını ağ biçimine çevirir (name/mimetype/base64 datas)."""
+        """Turn ir.attachment records into the wire format: name, mimetype and
+        base64 datas."""
         keep, _skipped = self._partition_attachments(attachments)
         result = []
         for attachment in keep:
@@ -375,10 +374,10 @@ class SupportBridgeConnection(models.Model):
         return result
 
     def _warn_skipped_attachments(self, channel, skipped):
-        """Gönderene, hangi eklerin karşı tarafa gitmediğini kanalın içinde
-        söyler. Sessizce atlamak kullanıcıyı dosyanın ulaştığı yanılgısında
-        bırakır. 'notification' tipinde gönderilir; köprü yalnızca 'comment'
-        tipini ilettiği için bu uyarı karşı tarafa geçmez."""
+        """Tell the sender, inside the channel, which attachments did not go.
+        Dropping them quietly leaves someone believing the file arrived. Sent
+        as 'notification', and the bridge only relays 'comment', so the warning
+        stays on this side."""
         self.ensure_one()
         if not skipped or not channel:
             return
@@ -397,19 +396,17 @@ class SupportBridgeConnection(models.Model):
         )
 
     def _deliver_one(self, item, advance_cursor=True):
-        """Sunucudan gelen tek bir olayı yerel olarak işler; olay ister anlık
-        gönderimle ister periyodik kontrolle gelmiş olsun aynı yol kullanılır.
+        """Apply one event from the vendor, by the same path whether it arrived
+        by push or by poll.
 
-        `advance_cursor` yalnızca periyodik kontrol için True olmalıdır. Orada
-        olaylar id sırasına göre tek tek işlendiği için imleci ilerletmek
-        güvenlidir. Anlık gönderimde ise her olay kendi thread'inde gittiğinden
-        olaylar sıra dışı varabilir; imleç orada ilerletilseydi, geç kalan
-        küçük id'li bir olay "zaten işlenmiş" sayılıp kalıcı olarak
-        kaybolurdu — periyodik kontrol de artık onu istemeyeceği için geri
-        gelmezdi. Bu yüzden anlık gönderim imlece hiç dokunmaz; mükerrer
-        teslimatı mesaj eşleme tablosu (mesajlar) ve tepkilerin doğası gereği
-        yinelenebilir olması (aynı tepkiyi iki kez eklemek tek kayıt üretir)
-        engeller.
+        advance_cursor must be True only for polling. There, events are handled
+        one by one in id order, so moving the cursor is safe. Pushes each go on
+        their own thread and can arrive out of order: moving the cursor there
+        would make a late, lower-numbered event look already handled and lose
+        it for good, since polling would no longer ask for it. So pushes never
+        touch the cursor. Duplicates are prevented instead by the message map
+        (for messages) and by reactions being naturally repeatable -- adding
+        the same reaction twice yields one record.
         """
         self.ensure_one()
         event_id = item.get('id') or 0
@@ -421,23 +418,23 @@ class SupportBridgeConnection(models.Model):
         elif event_type in ('reaction_add', 'reaction_remove'):
             self._deliver_reaction(item, 'add' if event_type == 'reaction_add' else 'remove')
         elif event_type == 'project_sync':
-            # Bayi proje açtığında/kapattığında liste kendiliğinden gelir;
-            # kullanıcının tekrar Connect'e basması gerekmez. Tam liste
-            # taşındığı için tekrar işlenmesi de zararsızdır.
+            # The list arrives on its own when the vendor shares or stops
+            # sharing a project. It carries the whole list, so handling it
+            # twice is harmless.
             self.env['support.bridge.project']._sync_from_hub(self, item.get('projects'))
         if advance_cursor and event_id > self.last_poll_cursor:
             self.write({'last_poll_cursor': event_id, 'last_synced': fields.Datetime.now()})
 
     def _deliver_message(self, item):
         self.ensure_one()
-        # Olay hangi projeye aitse o alt kanala yazılır. Bilinmeyen ya da
-        # arşivlenmiş bir jetonla gelen olay teslim edilmez; jetonu iptal
-        # edilmiş bir projenin konuşması burada da durur.
+        # The event goes to the sub-channel of the project it belongs to. An
+        # unknown or archived token is not delivered, which is how a revoked
+        # project's conversation stops on this side too.
         project = self.env['support.bridge.project']._find_by_token(
             self, item.get('project_token'))
         if not project or not project.active:
             _logger.info(
-                'support_bridge_client: bilinmeyen proje jetonu, olay atlandı (bağlantı %s)',
+                'support_bridge_client: unknown project token, event skipped (connection %s)',
                 self.id)
             return
         channel = project._ensure_channel()
@@ -448,19 +445,19 @@ class SupportBridgeConnection(models.Model):
         if remote_message_id and map_model.search_count([
                 ('connection_id', '=', self.id),
                 ('remote_message_id', '=', remote_message_id)]):
-            return  # diğer teslimat yolundan zaten iletilmiş
+            return  # already delivered by the other path
         attachment_tuples = []
         for att in (item.get('attachments') or [])[:MAX_ATTACHMENTS_PER_MESSAGE]:
             name = att.get('name') or 'file'
             try:
                 raw = base64.b64decode(att.get('datas') or '')
             except Exception:
-                # Gönderen taraf zaten sınırları uyguluyor; buraya düşen bir ek
-                # bozuk ya da kurcalanmış demektir — sessizce yutulmamalı.
-                _logger.warning('support_bridge_client: ek çözülemedi, atlandı: %s', name)
+                # The sender already enforces the limits, so anything that
+                # fails here is corrupt or tampered with -- do not swallow it.
+                _logger.warning('support_bridge_client: could not decode attachment, skipped: %s', name)
                 continue
             if not raw or len(raw) > MAX_ATTACHMENT_BYTES:
-                _logger.warning('support_bridge_client: ek reddedildi (boş veya sınır aşımı): %s', name)
+                _logger.warning('support_bridge_client: attachment rejected (empty or over the limit): %s', name)
                 continue
             attachment_tuples.append((name, raw))
         body = (item.get('body') or '').strip()
@@ -473,8 +470,8 @@ class SupportBridgeConnection(models.Model):
             email=item.get('author_email'),
         )
         html_body = plaintext2html(body) if body else ''
-        # Karşı tarafta sınıra takılan ekler burada da görünür olmalı; aksi
-        # halde kullanıcı eksik bilgiye dayanarak hareket eder.
+        # Attachments the vendor could not deliver must be visible here too,
+        # otherwise people act on incomplete information.
         if skipped:
             html_body += Markup('<p><em>%s</em></p>') % _(
                 "Attachment not delivered (size limit): %s", ', '.join(skipped))
@@ -499,7 +496,7 @@ class SupportBridgeConnection(models.Model):
             ('remote_message_id', '=', item.get('message_id') or 0),
         ], limit=1)
         if not map_row:
-            return  # buraya hiç köprülenmemiş bir mesaja verilen tepki
+            return  # a reaction on a message that was never bridged here
         content = (item.get('content') or '').strip()
         if not content:
             return
@@ -522,15 +519,15 @@ class SupportBridgeConnection(models.Model):
                 url, headers=self._headers(), params={'since': self.last_poll_cursor},
                 timeout=TIMEOUT)
         except requests.exceptions.RequestException as e:
-            _logger.warning('support_bridge_client: kontrol başarısız (bağlantı %s): %s', self.id, e)
+            _logger.warning('support_bridge_client: poll failed (connection %s): %s', self.id, e)
             return
         if not response.ok:
-            _logger.warning('support_bridge_client: kontrol başarısız (bağlantı %s): HTTP %s',
+            _logger.warning('support_bridge_client: poll failed (connection %s): HTTP %s',
                              self.id, response.status_code)
             return
         data = response.json()
         if not data.get('ok'):
-            _logger.warning('support_bridge_client: kontrol reddedildi (bağlantı %s): %s',
+            _logger.warning('support_bridge_client: poll rejected (connection %s): %s',
                              self.id, data.get('error'))
             return
         for item in data.get('events', []):
@@ -539,10 +536,10 @@ class SupportBridgeConnection(models.Model):
                 with self.env.cr.savepoint():
                     self._deliver_one(item)
             except Exception:
-                # Teslim edilemeyen tek bir olay tüm kuyruğu tıkamamalı:
+                # One undeliverable event must not jam the whole queue:
                 # logla, imleci ilerlet, devam et.
                 _logger.exception(
-                    'support_bridge_client: teslim edilemeyen olay atlandı %s (bağlantı %s)',
+                    'support_bridge_client: skipped undeliverable event %s (connection %s)',
                     event_id, self.id)
                 if event_id > self.last_poll_cursor:
                     self.write({'last_poll_cursor': event_id})
@@ -554,4 +551,4 @@ class SupportBridgeConnection(models.Model):
             try:
                 connection._poll_one()
             except Exception:
-                _logger.exception('support_bridge_client: bağlantı %s kontrol edilirken beklenmeyen hata', connection.id)
+                _logger.exception('support_bridge_client: unexpected error polling connection %s', connection.id)

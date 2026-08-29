@@ -2,13 +2,12 @@ from odoo import fields, models
 
 
 class SupportBridgeMessageMap(models.Model):
-    """Hangi yerel mail.message'ın sunucu tarafındaki hangi mesaja karşılık
-    geldiğini tutar.
+    """Which local mail.message corresponds to which message on the vendor's
+    side.
 
-    İki taraftan birinde verilen tepkinin karşı tarafta doğru mesaja
-    uygulanabilmesi için gereklidir. Ayrıca anlık gönderim ile periyodik
-    kontrol aynı mesajı iletmek için yarıştığında mükerrer kaydı önleyen
-    koruma görevini görür.
+    Needed so a reaction given on either side lands on the right message on
+    the other. It also guards against duplicates when push and poll race to
+    deliver the same message.
     """
     _name = 'support.bridge.message.map'
     _description = 'Support Bridge Local/Remote Message Map'

@@ -15,12 +15,11 @@ MAX_ATTACHMENTS_PER_MESSAGE = 20
 
 
 def _fire_and_forget_post(url, headers, payload, timeout):
-    """İsteği daemon thread içinde gönderir; böylece temsilcinin kendi
-    transaction'ı, müşterinin sunucusu yavaş veya kapalı olduğunda beklemez.
-    Yalnızca garantili bir yedeği olan (müşterinin poll cron'u) en iyi çaba
-    gönderimleri için kullanılır; hatalar loglanıp yutulur. Yalnızca gerçekten
-    commit edilmiş veri için tetiklenmesi adına cr.postcommit ile
-    zamanlanmalıdır."""
+    """Send in a daemon thread so the agent's own transaction never waits on
+    a slow or dead customer server. Only for best-effort sends that have a
+    guaranteed fallback (the customer's poll cron); errors are logged and
+    swallowed. Schedule it with cr.postcommit so it only fires for data that
+    actually committed."""
     def _send():
         try:
             requests.post(url, headers=headers, json=payload, timeout=timeout)
@@ -42,7 +41,7 @@ class SupportBridgeCustomer(models.Model):
     api_key = fields.Char(
         string='API Key',
         default=lambda self: secrets.token_urlsafe(32),
-        # index: kimlik doğrulanan her istekte bu alan üzerinden arama yapılır.
+        # index: every authenticated request looks the customer up by this.
         required=True, copy=False, readonly=True, index=True, groups='base.group_system',
         help="Hand this key, together with this server's address, to the customer — "
              "they paste both into their Support Bridge Client settings to connect.",
@@ -81,8 +80,8 @@ class SupportBridgeCustomer(models.Model):
         return records
 
     def _ensure_partner(self):
-        """Müşterinin temsil kontağı. Kanal oluşturmaz — sohbet kanalları
-        projelere aittir ve proje köprüye bağlandığında açılır."""
+        """The customer's persona contact. Creates no channel: chat channels
+        belong to projects and open when a project is shared."""
         self.ensure_one()
         if not self.partner_id:
             self.partner_id = self.env['res.partner'].sudo().create({
@@ -92,10 +91,9 @@ class SupportBridgeCustomer(models.Model):
             })
 
     def _update_remote_name(self, name):
-        """Client'tan gelen her /ping isteğinde, client'ın kendi gerçek şirket
-        adıyla çağrılır. Böylece alt kanal ve temsil kontağı, API anahtarını
-        oluştururken yöneticinin yazdığı geçici ad yerine müşterinin gerçek
-        adını taşır."""
+        """Called on every /ping with the customer's own company name, so the
+        contact and the channels carry their real name rather than the
+        placeholder typed when the API key was created."""
         self.ensure_one()
         name = (name or '').strip()
         if not name or name == self.name:
@@ -103,29 +101,28 @@ class SupportBridgeCustomer(models.Model):
         self.name = name
         if self.partner_id:
             self.partner_id.sudo().name = name
-        # Alt kanal adları müşteri adını önek olarak taşır, hepsi tazelenmeli.
+        # Sub-channel names carry the customer name as a prefix; refresh all.
         for project in self.project_ids:
             project._sync_support_bridge()
 
     def _update_public_url(self, public_url):
-        """Her /ping isteğinde çağrılır — müşterinin anlık teslimat adresini
-        kaydeder veya temizler, müşterinin güncel ayarlarıyla eşitler."""
+        """Called on every /ping: store or clear the customer's push address so
+        it matches whatever they currently have configured."""
         self.ensure_one()
         public_url = (public_url or '').strip() or False
         if public_url != self.client_public_url:
             self.client_public_url = public_url
 
     def _serialize_projects(self):
-        """Müşterinin kendi tarafında alt kanal açması için gereken asgari
-        bilgi. Takım adı da gönderilir çünkü müşteri tarafındaki gruplama
-        buna göre değil bayiye göre yapılsa da, kanal adında görünmesi
-        hangi ekiple konuşulduğunu belli eder."""
+        """The minimum the customer needs to build its sub-channels. The team
+        name travels too: their grouping is by vendor, not by team, but seeing
+        it tells them which team they are talking to."""
         self.ensure_one()
         return [{
-            # Kimlik projenin buradaki id'sidir, jeton değil. Jeton bir
-            # paroladır ve yenilenebilir; onu kimlik olarak kullanmak, her
-            # yenilemede karşı tarafta ikinci bir kayıt ve ikinci bir kanal
-            # açtırıp geçmişi ikiye böler.
+            # Identity is the project id here, not the token. A token is a
+            # password and can be rotated; keying on it would give the far side
+            # a second record and a second channel on every rotation, splitting
+            # the history in two.
             'remote_id': project.id,
             'token': project.support_bridge_token,
             'name': project.name or '',
@@ -133,27 +130,27 @@ class SupportBridgeCustomer(models.Model):
         } for project in self.project_ids.sudo().filtered('support_bridge_token')]
 
     def _enqueue_project_sync(self):
-        """Proje listesi değiştiğinde müşteriye haber verir.
+        """Tell the customer the project list changed.
 
-        Delta değil, listenin tamamı gönderilir: alıcı taraf zaten tam listeye
-        göre çalışıyor (yoksa oluştur, varsa güncelle, listede olmayanı
-        arşivle), bu yüzden tam liste hem sıralamadan bağımsızdır hem de
-        kaçırılan bir olay bir sonrakiyle kendiliğinden telafi olur.
+        The whole list travels, not a delta. The receiving side already works
+        from a full list -- create, update, archive what is missing -- so a
+        full list is order-independent and a missed event is repaired by the
+        next one.
 
-        Mesajlarla aynı kuyruğu kullanır; yani erişilebilir müşteriye anında
-        itilir, diğerlerinde bir dakika içinde periyodik kontrolle gelir.
-        Müşterinin tekrar Connect'e basması gerekmez."""
+        It rides the same queue as messages: pushed at once to a reachable
+        customer, picked up within a minute by everyone else. Nobody has to
+        press Connect again."""
         self.ensure_one()
         return self._enqueue_event('project_sync', {'projects': self._serialize_projects()}, None)
 
     def _enqueue_event(self, event_type, payload, project):
-        """Bu müşteri için bir giden olay kaydeder. Olay kuyruğu, her iki
-        teslimat yolunun da okuduğu tek kaynaktır: müşterinin poll cron'u
-        kuyruğu olay id'sine göre tarar ve müşteri kendini genel erişilebilir
-        ilan ettiyse aynı olay ona anında iletilir.
+        """Record one outbound event for this customer. The queue is the single
+        source both delivery paths read: the customer's poll cron walks it by
+        event id, and a customer that declared itself reachable also gets the
+        same event pushed immediately.
 
-        Olay daima bir projeye aittir; karşı taraf hangi alt kanala yazacağını
-        yükteki proje jetonundan bulur."""
+        Message and reaction events always belong to a project; the far side
+        finds the right sub-channel from the token in the payload."""
         self.ensure_one()
         event = self.env['support.bridge.event'].sudo().create({
             'customer_id': self.id,
@@ -165,28 +162,27 @@ class SupportBridgeCustomer(models.Model):
         return event
 
     def _serialize_event(self, event):
-        """Bir olayın ağ üzerinden gönderilecek biçimi; anlık gönderim ve
-        periyodik kontrol aynı biçimi kullanır. Ek içerikleri olay kaydına
-        yazılmaz, serileştirme anında tazeden okunur — böylece kuyruk tablosu
-        küçük kalır."""
+        """The wire format of an event; push and poll both use it. Attachment
+        contents are not stored on the event row but read fresh at this point,
+        which keeps the queue table small."""
         self.ensure_one()
         data = dict(event.payload or {})
         data['id'] = event.id
         data['type'] = event.event_type
-        # Jeton olay kaydından değil projeden okunur: iptal edilmiş bir proje
-        # için kuyrukta bekleyen olaylar da böylece teslim edilemez hale gelir.
+        # The token is read from the project, not copied onto the event, so
+        # revoking a project also strands events already sitting in its queue.
         data['project_token'] = event.project_id.sudo().support_bridge_token or ''
         data['project_name'] = event.project_id.name or ''
         if event.event_type == 'project_sync':
-            # Liste, olay kaydindaki kopya degil, o anki gercek durum olmali:
-            # kuyrukta bekleyen eski bir sync olayi da guncel listeyi tasir.
+            # The list must be the truth right now rather than a copy taken
+            # when the event was queued, so even a stale sync event carries it.
             data['projects'] = self._serialize_projects()
         if event.event_type == 'message' and data.get('message_id'):
             message = self.env['mail.message'].sudo().browse(data['message_id']).exists()
             if message:
                 data['attachments'] = self._serialize_attachments(message.attachment_ids)
-                # Alıcı da hangi ekin gelmediğini görmeli; aksi halde eksik
-                # bilgiye dayanarak hareket eder.
+                # The recipient must see which attachment did not make it,
+                # otherwise they act on incomplete information.
                 data['skipped_attachments'] = self._partition_attachments(
                     message.attachment_ids)[1]
             else:
@@ -195,11 +191,11 @@ class SupportBridgeCustomer(models.Model):
 
     @api.model
     def _partition_attachments(self, attachments):
-        """(iletilecek ekler, iletilemeyeceklerin etiketleri).
+        """Return (attachments to send, labels of the ones that cannot go).
 
-        Boyut ve adet sınırlarının tek kaynağı burasıdır. Yalnızca meta veriye
-        bakar, ek içeriğini okumaz — bu sayede yalnızca "ne atlanacak?"
-        sorusunu cevaplamak için çağrılması ucuzdur.
+        The single place the size and count limits live. It reads metadata
+        only, never attachment contents, so calling it just to answer "what
+        gets skipped?" is cheap.
         """
         keep = self.env['ir.attachment']
         skipped = []
@@ -230,10 +226,10 @@ class SupportBridgeCustomer(models.Model):
         return result
 
     def _warn_skipped_attachments(self, channel, skipped):
-        """Gönderene, hangi eklerin karşı tarafa gitmediğini kanalın içinde
-        söyler. Sessizce atlamak kullanıcıyı dosyanın ulaştığı yanılgısında
-        bırakır. 'notification' tipinde gönderilir; köprü yalnızca 'comment'
-        tipini ilettiği için bu uyarı karşı tarafa geçmez."""
+        """Tell the sender, inside the channel, which attachments did not go.
+        Dropping them quietly leaves someone believing the file arrived. Sent
+        as 'notification', and the bridge only relays 'comment', so the warning
+        stays on this side."""
         self.ensure_one()
         if not skipped or not channel:
             return
@@ -253,33 +249,32 @@ class SupportBridgeCustomer(models.Model):
 
     @api.model
     def _decode_attachments(self, items):
-        """Ağ biçimini message_post'un beklediği `attachments` demetlerine
-        çevirir."""
+        """Turn the wire format into the attachment tuples message_post wants."""
         result = []
         for item in (items or [])[:MAX_ATTACHMENTS_PER_MESSAGE]:
             name = item.get('name') or 'file'
             try:
                 raw = base64.b64decode(item.get('datas') or '')
             except Exception:
-                # Gönderen taraf zaten sınırları uyguluyor; buraya düşen bir ek
-                # bozuk ya da kurcalanmış demektir — sessizce yutulmamalı.
-                _logger.warning('support_bridge_hub: ek çözülemedi, atlandı: %s', name)
+                # The sender already enforces the limits, so anything that
+                # fails here is corrupt or tampered with -- do not swallow it.
+                _logger.warning('support_bridge_hub: could not decode attachment, skipped: %s', name)
                 continue
             if not raw or len(raw) > MAX_ATTACHMENT_BYTES:
-                _logger.warning('support_bridge_hub: ek reddedildi (boş veya sınır aşımı): %s', name)
+                _logger.warning('support_bridge_hub: attachment rejected (empty or over the limit): %s', name)
                 continue
             result.append((name, raw))
         return result
 
     def _apply_client_reaction(self, project, message_id, content, action, author_name,
                                author_remote_id=None, author_email=None):
-        """Müşteri tarafından iletilen tepkiyi, ilgili projenin kanalındaki
-        mesaja, tepkiyi veren kişinin kontağı adına uygular. `_message_reaction`
-        hem kaydı değiştirir hem de canlı bus bildirimini gönderir; böylece
-        temsilciler tepkinin eklenip kaldırılmasını anında görür.
+        """Apply a reaction relayed from the customer to the right message in
+        that project's channel, as the contact of whoever reacted.
+        _message_reaction both stores it and fires the live bus notification,
+        so agents see it appear and disappear at once.
 
-        Mesajın gerçekten o projenin kanalında olduğu doğrulanır: aksi halde
-        geçerli bir jetonla başka bir kanaldaki mesaja tepki verilebilirdi."""
+        We check the message really sits in that project's channel: otherwise
+        a valid token could react to a message in some other channel."""
         self.ensure_one()
         message = self.env['mail.message'].sudo().browse(int(message_id or 0)).exists()
         channel = project.sudo().support_bridge_channel_id
@@ -295,37 +290,35 @@ class SupportBridgeCustomer(models.Model):
         return True
 
     def _push_to_client(self, event):
-        """Kendini genel erişilebilir ilan eden müşteriler için en iyi çaba
-        prensibiyle anlık teslimat; commit sonrasında ve ayrı thread'de
-        tetiklenir, böylece temsilci müşterinin ağını beklemez. Kuyruğa alma
-        veya yeniden deneme yoktur — herhangi bir sebeple başarısız olursa
-        müşterinin kendi poll cron'u garantili yedektir, bu yüzden sessizce
-        başarısız olmak doğru davranıştır."""
+        """Best-effort instant delivery for customers that declared themselves
+        reachable. Fired after commit on its own thread so the agent never
+        waits on the customer's network. No queueing and no retry: if it fails
+        for any reason the customer's own poll cron is the guaranteed
+        fallback, which is why failing quietly is the right behaviour."""
         self.ensure_one()
         if not self.client_public_url:
             return
         url = self.client_public_url + '/support_bridge/deliver'
         headers = {'Authorization': 'Bearer %s' % self.api_key}
-        # Şimdi, transaction içindeyken serileştirilir (ek içerikleri dahil);
-        # callback'in kendisi commit sonrasında ORM'e dokunmamalıdır.
+        # Serialize now, while still in the transaction (attachment contents
+        # included); the callback itself must not touch the ORM after commit.
         payload = self._serialize_event(event)
         self.env.cr.postcommit.add(
             lambda: _fire_and_forget_post(url, headers, payload, PUSH_TIMEOUT))
 
     def _get_or_create_remote_author(self, name, remote_id=None, email=None):
-        """Müşteri tarafındaki gerçek mesaj yazarının burada kullanıcı hesabı
-        yoktur. Bu yüzden iletilen mesajlar, müşterinin temsil kontağının
-        altında açılan kişiye özel küçük kontaklara atfedilir — temsil
-        kontağının kendisine değil; böylece farklı kişiler Discuss'ta kendi
-        adlarıyla görünür.
+        """The real author on the customer's side has no user account here, so
+        relayed messages are attributed to a small per-person contact nested
+        under the customer persona rather than to the persona itself. That way
+        different people show up in Discuss under their own names.
 
-        Eşleştirme anahtarı karşı taraftaki partner id'sidir; ad yalnızca
-        görünen etikettir ve karşı tarafta değiştiğinde burada da güncellenir.
-        Ada göre eşleştirmek iki hataya yol açardı: aynı adlı iki kişi tek
-        kontağa düşer, ad değiştiren kişi ise ikinci bir kontak açtırıp
-        geçmişini bölerdi. E-posta da taşınır ama yalnızca ayırt edici bilgi
-        olarak — asla eşleştirme anahtarı değildir, çünkü değişebilir ve
-        paylaşılan kutular birden çok kişiye ait olabilir.
+        Matching is on the partner id from the far side. The name is a display
+        label and is refreshed whenever it changes over there. Matching on the
+        name would fail twice over: two people sharing a name would collapse
+        into one contact, and renaming someone would open a second contact and
+        split their history. Email travels too, but only as a distinguishing
+        attribute -- never as the matching key, since it changes and shared
+        mailboxes belong to several people.
         """
         self.ensure_one()
         name = (name or '').strip()
@@ -338,15 +331,15 @@ class SupportBridgeCustomer(models.Model):
             contact = Partner.search(
                 domain + [('support_bridge_hub_remote_id', '=', remote_id)], limit=1)
             if not contact and name:
-                # Kimlik taşımayan eski kontaklar (bu özellik öncesinde ada
-                # göre açılmış olanlar) ilk mesajda kimliğiyle eşleştirilir.
+                # Older contacts carry no id (they were created by name
+                # before this existed); adopt them on their first message.
                 contact = Partner.search(
                     domain + [('support_bridge_hub_remote_id', '=', False),
                               ('name', '=', name)], limit=1)
                 if contact:
                     contact.support_bridge_hub_remote_id = remote_id
         elif name:
-            # Karşı taraf henüz kimlik göndermiyor (eski sürüm) — ada düş.
+            # The far side sends no id yet (older version) -- fall back to name.
             contact = Partner.search(
                 domain + [('name', '=', name)], limit=1)
 
@@ -371,9 +364,8 @@ class SupportBridgeCustomer(models.Model):
         })
 
     def _is_remote_author(self, partner):
-        """`partner`, bu müşterinin temsil kontağı ya da onun altında
-        _get_or_create_remote_author tarafından açılmış kişi kontaklarından
-        biriyse True döner."""
+        """True when partner is this customer's persona, or one of the per-person
+        contacts _get_or_create_remote_author opened under it."""
         self.ensure_one()
         return bool(partner) and (partner.id == self.partner_id.id or partner.parent_id.id == self.partner_id.id)
 

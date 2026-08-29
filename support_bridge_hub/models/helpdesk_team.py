@@ -13,18 +13,18 @@ class HelpdeskTeam(models.Model):
     )
 
     def _bridge_partners(self):
-        """Kanalları görecek kişiler: takımın üyeleri. Erişimin tek kaynağı
-        burasıdır — köprüye ayrı bir temsilci listesi tutulmaz, çünkü iki liste
-        er geç birbirinden ayrışır ve hangisinin geçerli olduğu belirsizleşir."""
+        """Who can see the channels: the team's members, and nothing else.
+        A second list of agents would eventually drift from this one, and then
+        it is anyone's guess which of the two actually grants access."""
         self.ensure_one()
         return self.member_ids.partner_id
 
     def _get_or_create_bridge_channel(self):
-        """Takımın grup kanalı; proje alt kanalları bunun altına asılır.
+        """The team's group channel; project sub-channels hang under it.
 
-        'group' tipi bilinçli: 'channel' tipinde Odoo'nun kayıt kuralı üyeliğe
-        bakmadan tüm dahili kullanıcılara okuma izni verir. 'group' tipinde
-        erişim yalnızca üyeliktir — kanalın kendisine ya da üst kanalına."""
+        The 'group' type is deliberate. For 'channel', Odoo's record rule
+        grants every internal user read access regardless of membership. For
+        'group', access is membership alone -- of the channel or its parent."""
         self.ensure_one()
         if self.support_bridge_channel_id:
             return self.support_bridge_channel_id
@@ -50,13 +50,12 @@ class HelpdeskTeam(models.Model):
         return res
 
     def _sync_bridge_members(self, previous_members=None):
-        """Takım üyeliğini grup kanalına ve altındaki tüm proje kanallarına
-        yansıtır.
+        """Mirror team membership onto the group and every project sub-channel.
 
-        Çıkarma iki yerde birden yapılmalıdır: Odoo bir alt kanala eklenen
-        herkesi otomatik olarak üst kanala da üye yapar, üst kanal üyeliği ise
-        tek başına bütün alt kanalları okuma yetkisi verir. Yalnızca birinden
-        çıkarmak erişimi gerçekten kesmez."""
+        Removal has to happen in both places: Odoo adds anyone joining a
+        sub-channel to the parent as well, and parent membership on its own
+        grants read access to every sub-channel. Removing from only one of
+        them revokes nothing."""
         self.ensure_one()
         group = self.support_bridge_channel_id.sudo()
         if not group:

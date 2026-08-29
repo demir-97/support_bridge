@@ -2,9 +2,8 @@ from datetime import timedelta
 
 from odoo import api, fields, models
 
-# Olaylar bir teslimat kuyruğudur, arşiv değil: her client'ın kuyruğu çekmesi
-# için yeterli süre geçtikten sonra (cron'ları dakikada bir çalışır) eski
-# satırlar yalnızca ölü ağırlıktır.
+# This is a delivery queue, not an archive. Clients poll every minute, so rows
+# older than this have been fetched long ago and are dead weight.
 EVENT_RETENTION_DAYS = 30
 
 
@@ -15,10 +14,10 @@ class SupportBridgeEvent(models.Model):
 
     customer_id = fields.Many2one(
         'support.bridge.customer', required=True, ondelete='cascade', index=True)
-    # Olayın ait olduğu proje; karşı taraf hangi alt kanala yazacağını buradan
-    # türeyen jetondan bulur. Proje silinirse olayın teslim edilecek bir yeri
-    # kalmaz, o yüzden satır da gider. 'project_sync' olayları tek bir projeye
-    # ait olmadığı için burası boş kalabilir.
+    # The project this event belongs to. The far side finds the right sub-channel
+    # from the token this points at. Deleting the project leaves the event with
+    # nowhere to go, so the row goes too. Empty for 'project_sync', which is
+    # about the whole list rather than one project.
     project_id = fields.Many2one(
         'project.project', ondelete='cascade', index='btree_not_null')
     event_type = fields.Selection([

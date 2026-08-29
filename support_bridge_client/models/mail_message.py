@@ -9,11 +9,11 @@ _logger = logging.getLogger(__name__)
 
 
 def _flush_outbox_after_commit(dbname, outbox_ids):
-    """Yeni kuyruğa alınan satırların anlık gönderimini, kendi cursor'una sahip
-    bir daemon thread içinde dener; böylece sohbet mesajı yazmak, sunucu yavaş
-    veya erişilemez olduğunda beklemeye takılmaz. cr.postcommit ile
-    zamanlandığı için yalnızca gerçekten commit edilmiş satırlar için çalışır;
-    bu thread'in gönderemediği her şeyi yeniden deneme cron'u üstlenir."""
+    """Try to send newly queued rows at once, in a daemon thread with its own
+    cursor, so writing a chat message never blocks on a slow or unreachable
+    vendor. Scheduled with cr.postcommit, so it only runs for rows that
+    actually committed; whatever this thread cannot send, the retry cron
+    takes over."""
     def _run():
         try:
             registry = Registry(dbname)
@@ -23,7 +23,7 @@ def _flush_outbox_after_commit(dbname, outbox_ids):
                     if row.state == 'pending':
                         row._try_send()
         except Exception:
-            _logger.exception('support_bridge_client: arka planda giden kuyruk gönderimi başarısız')
+            _logger.exception('support_bridge_client: background outbox flush failed')
     threading.Thread(target=_run, daemon=True).start()
 
 
@@ -41,16 +41,16 @@ class MailMessage(models.Model):
             lambda m: m.model == 'discuss.channel' and m.message_type == 'comment')
         if not channel_messages:
             return
-        # Yönlendirme proje alt kanalına göre: bir bayiyle birden çok proje
-        # yürüyebilir ve her birinin kendi kanalı vardır. Arşivlenmiş projeler
-        # dışarıda kalır, yani bayi jetonu iptal ettiğinde giden yol da durur.
+        # Routing is by project sub-channel: several projects can run with
+        # one vendor and each has its own channel. Archived projects are left
+        # out, so revoking a token stops the outbound path too.
         projects = self.env['support.bridge.project'].sudo().search([
             ('channel_id', 'in', channel_messages.mapped('res_id')),
             ('connection_id.state', '=', 'connected'),
         ])
         project_by_channel = {p.channel_id.id: p for p in projects}
-        # Arşivlenmiş projelerin kanalı yerinde kalır; oraya yazan kullanıcı
-        # mesajının gittiğini sanmamalı.
+        # An archived project keeps its channel; whoever writes there must
+        # not be left thinking the message went out.
         stale_by_channel = {
             p.channel_id.id: p
             for p in self.env['support.bridge.project'].sudo()
@@ -70,7 +70,7 @@ class MailMessage(models.Model):
                 continue
             connection = project.connection_id
             if connection._is_remote_author(message.author_id):
-                continue  # sunucudan iletilmiş mesaj — asla geri yansıtma
+                continue  # relayed in from the vendor -- never echo it back
             body = html2plaintext(message.body or '').strip()
             if not body and not message.attachment_ids:
                 continue
@@ -78,14 +78,14 @@ class MailMessage(models.Model):
                 'connection_id': connection.id,
                 'project_id': project.id,
                 'message_id': message.id,
-                # Kimlik anahtarı partner id'sidir; ad ve e-posta yalnızca görünen bilgidir.
+                # Identity is the partner id; name and email are display only.
                 'author_partner_id': message.author_id.id,
                 'author_name': message.author_id.name or message.email_from or '',
                 'author_email': message.author_id.email or message.email_from or '',
                 'body': body,
             })
             outbox_ids.append(outbox.id)
-            # Sınırı aşan ekler iletilmez; gönderenin bunu bilmesi gerekir.
+            # Oversized attachments are not delivered; the sender must know.
             skipped = connection._partition_attachments(message.attachment_ids)[1]
             if skipped:
                 connection._warn_skipped_attachments(project.channel_id, skipped)

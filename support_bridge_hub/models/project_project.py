@@ -43,10 +43,9 @@ class ProjectProject(models.Model):
 
     def write(self, vals):
         res = super().write(vals)
-        # Yalnızca zaten paylaşılmış projeler için ad tazelenir. Müşteri veya
-        # takım alanını doldurmak hiçbir şey paylaşmaz; paylaşım açık bir
-        # eylemdir, çünkü bir proje kaydı açmak henüz müşteriye anlatılmaya
-        # hazır olmak demek değildir.
+        # Only already-shared projects refresh their name. Filling in the
+        # customer or the team shares nothing: opening a project record is not
+        # the same as being ready to show it to the customer.
         if {'name', 'support_bridge_customer_id'} & set(vals):
             for project in self.filtered('support_bridge_shared'):
                 project._sync_support_bridge()
@@ -54,10 +53,9 @@ class ProjectProject(models.Model):
         return res
 
     def _bridge_channel_name(self):
-        """Alt kanal adı: 'Müşteri — Proje'. Müşteri adı öne alınır çünkü
-        gruplama takıma göre yapılıyor; aynı grupta farklı müşterilerin
-        projeleri yan yana durur ve hangisinin kime ait olduğu ancak adından
-        okunabilir."""
+        """Sub-channel name: 'Customer — Project'. The customer comes first
+        because grouping is by team, so projects from different customers sit
+        side by side and only the name says whose is whose."""
         self.ensure_one()
         customer = self.support_bridge_customer_id
         if not customer:
@@ -65,12 +63,12 @@ class ProjectProject(models.Model):
         return '%s — %s' % (customer.name, self.name or _('Project'))
 
     def _sync_support_bridge(self):
-        """Jetonu, kanalı ve kanal adını güncel tutar.
+        """Keep the token, the channel and the channel name up to date.
 
-        Müşteriye haber vermek bu fonksiyonun işi DEĞİLDİR. Haber, paylaşımı
-        başlatan/durduran eylemin kendisinden gider; buraya bağlansaydı
-        "kanal zaten var ve adı da aynı" durumunda hiçbir şey gönderilmez ve
-        tekrar paylaşım karşı tarafa hiç yansımazdı."""
+        Telling the customer is NOT this function's job. That belongs to the
+        act that starts or stops the share. Wired here, it would stay silent
+        whenever the channel already exists under the same name -- which is
+        exactly the case when a stopped project is shared again."""
         self.ensure_one()
         if not self.support_bridge_customer_id or not self.support_bridge_team_id:
             return
@@ -82,9 +80,9 @@ class ProjectProject(models.Model):
             self._create_bridge_channel(parent)
             return
         if channel.parent_channel_id != parent:
-            # Odoo, bir alt kanalın üst kanalını sonradan değiştirmeye izin
-            # vermez. Henüz konuşulmamışsa kanalı yeniden kurmak bedelsizdir;
-            # geçmiş varsa onu ikiye bölmektense değişikliği reddediyoruz.
+            # Odoo will not reparent an existing sub-channel. Rebuilding it
+            # is free while nothing has been said; once there is history we
+            # refuse the change rather than split the conversation in two.
             if channel.message_ids.filtered(lambda m: m.message_type == 'comment'):
                 raise UserError(_(
                     "This project's conversation already has messages under "
@@ -101,8 +99,8 @@ class ProjectProject(models.Model):
             channel.name = name
 
     def _create_bridge_channel(self, parent):
-        """Alt kanalın üyeleri takımdan gelir — kimin göreceğinin tek kaynağı
-        helpdesk takımının üye listesidir."""
+        """Members come from the team: its membership is the only thing that
+        decides who sees this conversation."""
         self.ensure_one()
         self.sudo().support_bridge_channel_id = self.env['discuss.channel'].sudo().create({
             'name': self._bridge_channel_name(),
@@ -115,9 +113,9 @@ class ProjectProject(models.Model):
         })
 
     def action_support_bridge_share(self):
-        """Projeyi müşteriyle paylaşır — kanalları açar, jetonu üretir ve
-        listeyi karşı tarafa gönderir. Paylaşım açık bir eylemdir: proje
-        kaydını açmak, onu müşteriye göstermeye hazır olmak demek değildir."""
+        """Share the project: open the channels, issue the token and send the
+        list across. Sharing is deliberate -- opening a project record is not
+        the same as being ready to show it to the customer."""
         for project in self:
             if not project.support_bridge_customer_id:
                 raise UserError(_(
@@ -132,16 +130,15 @@ class ProjectProject(models.Model):
                     "the customer first.", project.support_bridge_customer_id.name))
             project.sudo().support_bridge_shared = True
             project._sync_support_bridge()
-            # Her paylasimda gonderilir: ilk paylasimda da, durdurulmus bir
-            # projenin tekrar paylasilmasinda da. Kanal zaten duruyor olabilir,
-            # bu haber vermemenin gerekcesi degil.
+            # Sent on every share, the first and the fifth alike. The channel
+            # may already exist, which is no reason to stay silent.
             project.support_bridge_customer_id._enqueue_project_sync()
         return True
 
     def action_support_bridge_revoke(self):
-        """Paylaşımı durdurur. Kanal ve geçmiş iki tarafta da kalır, ama
-        müşteriye bunun olduğu açıkça söylenir — sessizce kesmek, karşı tarafı
-        mesajlarının gittiği yanılgısında bırakır."""
+        """Stop sharing. Both channels and their history stay, but the customer
+        is told plainly -- cutting the line quietly leaves them believing
+        their messages still arrive."""
         for project in self:
             if not project.support_bridge_shared:
                 continue
@@ -163,9 +160,8 @@ class ProjectProject(models.Model):
         return True
 
     def _post_bridge_notice(self, body):
-        """Kanalın kendi içine bilgilendirme notu. 'notification' tipinde
-        gönderilir; köprü yalnızca 'comment' ilettiği için karşı tarafa
-        geçmez."""
+        """Post an informational note inside the channel. Sent as 'notification',
+        and the bridge only relays 'comment', so it stays on this side."""
         self.ensure_one()
         channel = self.sudo().support_bridge_channel_id
         if channel:
@@ -174,8 +170,8 @@ class ProjectProject(models.Model):
 
     @api.model
     def _find_bridged_by_channel(self, channel_ids):
-        """{kanal id: proje} — yalnızca jetonu duran projeler. Jetonu iptal
-        edilmiş bir projenin kanalına yazılan mesaj dışarı çıkmaz."""
+        """{channel id: project} for projects that still hold a token. A message
+        written into a revoked project's channel never leaves."""
         if not channel_ids:
             return {}
         projects = self.sudo().search([
@@ -187,7 +183,8 @@ class ProjectProject(models.Model):
 
     @api.model
     def _find_unshared_by_channel(self, channel_ids):
-        """{kanal id: proje} — kanalı duran ama artık paylaşılmayan projeler."""
+        """{channel id: project} for projects whose channel remains but which are
+        no longer shared."""
         if not channel_ids:
             return {}
         projects = self.sudo().search([
@@ -197,15 +194,15 @@ class ProjectProject(models.Model):
         return {p.support_bridge_channel_id.id: p for p in projects}
 
     def _warn_not_delivered(self):
-        """Paylaşımı durmuş kanala yazıldığında bir kez uyarır. Aynı uyarıyı
-        her mesajda tekrarlamak kanalı doldurur, o yüzden son mesaj zaten
-        uyarıysa tekrar yazılmaz."""
+        """Warn once when someone writes into a channel that stopped sharing.
+        Repeating it on every message would bury the channel, so it is skipped
+        when the previous message is already a warning."""
         self.ensure_one()
         channel = self.sudo().support_bridge_channel_id
         if not channel:
             return
-        son = channel.message_ids[:1]
-        if son and son.message_type == 'notification':
+        latest = channel.message_ids[:1]
+        if latest and latest.message_type == 'notification':
             return
         self._post_bridge_notice(_(
             "Not delivered — this project is no longer shared with %s. "
@@ -214,9 +211,9 @@ class ProjectProject(models.Model):
 
     @api.model
     def _find_by_bridge_token(self, customer, token):
-        """Gelen bir olayın hangi projeye ait olduğunu bulur. Arama daima
-        müşteriyle sınırlanır: jeton tahmin edilse bile başka bir müşterinin
-        projesine yazılamaz."""
+        """Find which project an incoming event belongs to. The search is always
+        scoped to the authenticated customer, so even a guessed token cannot
+        reach another customer's project."""
         token = (token or '').strip()
         if not token or not customer:
             return self.browse()

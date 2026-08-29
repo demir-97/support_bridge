@@ -2,12 +2,12 @@ from odoo import _, fields, models
 
 
 class SupportBridgeProject(models.Model):
-    """Bayinin bizim için yürüttüğü bir proje ve ona ait sohbet kanalı.
+    """A project the vendor runs for us, and its chat channel.
 
-    Kayıtlar bayiden gelir, burada oluşturulmaz: bağlanıldığında bayi kendi
-    projelerini jetonlarıyla birlikte bildirir ve her biri bayi grubunun
-    altında bir alt kanal alır. Böylece aynı bayiyle birden çok iş yürütülürken
-    konuşmalar birbirine karışmaz.
+    Records come from the vendor and are never created here: they announce
+    their projects with a token each, and every one gets a sub-channel under
+    the vendor's group. That way several jobs with the same vendor do not run
+    together in one thread.
     """
     _name = 'support.bridge.project'
     _description = 'Support Bridge Vendor Project'
@@ -47,7 +47,7 @@ class SupportBridgeProject(models.Model):
     _remote_unique = models.UniqueIndex("(connection_id, remote_id)")
 
     def _ensure_channel(self):
-        """Projenin alt kanalı; bayi grubunun altına asılır."""
+        """The project's sub-channel, hung under the vendor's group."""
         self.ensure_one()
         parent = self.connection_id.channel_id
         if self.channel_id or not parent:
@@ -64,14 +64,16 @@ class SupportBridgeProject(models.Model):
         return self.channel_id
 
     def _sync_from_hub(self, connection, items):
-        """Bayinin bildirdiği proje listesini yerel kayıtlarla eşitler.
+        """Reconcile the vendor's announced list with the local records.
 
-        Listede olmayan projeler silinmez, arşivlenir: bayi bir projenin
-        jetonunu iptal ettiğinde konuşma durmalı ama geçmiş kaybolmamalıdır.
+        Projects missing from the list are archived, not deleted: when the
+        vendor stops sharing one the conversation must stop, but the history
+        must not disappear.
         """
         Project = self.sudo()
-        # active_test=False şart: arşivlenmiş bir proje bayi tarafından yeniden
-        # paylaşıldığında bulunamazsa kopya oluşur ve tekil indekse takılır.
+        # active_test=False matters: if an archived project cannot be found
+        # when the vendor shares it again, we would create a duplicate and hit
+        # the unique index.
         existing = {p.remote_id: p for p in Project.with_context(active_test=False).search(
             [('connection_id', '=', connection.id)]) if p.remote_id}
         seen = set()
@@ -84,18 +86,18 @@ class SupportBridgeProject(models.Model):
             values = {
                 'name': item.get('name') or '',
                 'team_name': item.get('team_name') or '',
-                # Jeton her eşitlemede tazelenir; bayi yenilediğinde kayıt
-                # aynı kalır, yalnızca parolası değişir.
+                # The token is refreshed on every sync: when the vendor
+                # rotates it the record stays, only its password changes.
                 'token': token,
                 'active': True,
             }
             project = existing.get(remote_id)
             if project:
-                yeniden_acildi = not project.active
+                resumed = not project.active
                 project.write(values)
-                if yeniden_acildi:
-                    # Durdurulduğunda haber verdik; tekrar başladığında da
-                    # vermeliyiz, yoksa kanal sessizce canlanır.
+                if resumed:
+                    # We announced the stop, so we announce the resume too;
+                    # otherwise a dead channel quietly comes back to life.
                     project._post_notice(_(
                         "%s is sharing this project again. Messages written "
                         "here are delivered from now on.",
@@ -109,37 +111,39 @@ class SupportBridgeProject(models.Model):
         stale = [p for remote_id, p in existing.items() if remote_id not in seen and p.active]
         for project in stale:
             project.active = False
-            # Kanal yerinde kaldığı için, haber verilmezse kullanıcı buraya
-            # yazmaya devam eder ve mesajlarının gittiğini sanır.
+            # The channel stays, so without a notice people keep writing
+            # here believing their messages still arrive.
             project._post_notice(_(
                 "%s has stopped sharing this project. Messages written here "
                 "are no longer delivered. The history stays for reference.",
                 connection.partner_id.name or _('Your vendor')))
 
     def _post_notice(self, body):
-        """Kanalın içine bilgilendirme notu; 'notification' tipi olduğu için
-        köprüden karşı tarafa geçmez."""
+        """An informational note inside the channel. Sent as 'notification', so
+        the bridge does not carry it to the other side."""
         self.ensure_one()
         if self.channel_id:
             self.channel_id.sudo().message_post(
                 body=body, message_type='notification', subtype_xmlid='mail.mt_note')
 
     def _warn_not_delivered(self):
-        """Paylaşımı durmuş kanala yazıldığında bir kez uyarır; arka arkaya
-        uyarı yığmamak için son mesaj zaten uyarıysa tekrarlanmaz."""
+        """Warn once when someone writes into a channel that stopped sharing;
+        skipped when the previous message is already a warning, so warnings do
+        not pile up."""
         self.ensure_one()
         if not self.channel_id:
             return
-        son = self.channel_id.message_ids[:1]
-        if son and son.message_type == 'notification':
+        latest = self.channel_id.message_ids[:1]
+        if latest and latest.message_type == 'notification':
             return
         self._post_notice(_(
             "Not delivered — %s is no longer sharing this project with you.",
             self.connection_id.partner_id.name or _('your vendor')))
 
     def _find_by_token(self, connection, token):
-        """Gelen bir olayın hangi projeye ait olduğu. Arama daima bağlantıyla
-        sınırlı — jeton başka bir bayinin projesine denk gelemez."""
+        """Which project an incoming event belongs to. The search is always
+        scoped to the connection, so a token cannot reach another vendor's
+        project."""
         token = (token or '').strip()
         if not token or not connection:
             return self.browse()

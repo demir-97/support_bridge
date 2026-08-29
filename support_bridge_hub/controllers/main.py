@@ -12,9 +12,9 @@ POLL_BATCH_SIZE = 100
 
 
 def _authenticate(env):
-    """İsteği yapan müşteri bağlantısını Authorization başlığından çözer.
+    """Resolve the calling customer from the Authorization header.
 
-    `support.bridge.customer` kaydını (sudo) veya None döner.
+    Returns a sudo'd support.bridge.customer, or None.
     """
     auth_header = request.httprequest.headers.get('Authorization', '')
     if not auth_header.startswith('Bearer '):
@@ -42,9 +42,9 @@ class SupportBridgeHubController(http.Controller):
             'ok': True,
             'hub_name': company.name,
             'customer_name': customer.name,
-            # Müşteri alt kanallarını bu listeden kurar. Jetonu iptal edilmiş
-            # proje listede yer almaz; müşteri tarafında kanal ve geçmiş kalır
-            # ama o projeye artık yazılamaz.
+            # The customer builds its sub-channels from this list. A project whose
+            # token was revoked is absent: their channel and history stay, but
+            # nothing travels for it any more.
             'projects': customer._serialize_projects(),
         })
 
@@ -69,8 +69,8 @@ class SupportBridgeHubController(http.Controller):
             email=data.get('author_email'),
         )
         body = plaintext2html(text) if text else ''
-        # Karşı tarafta sınıra takılan ekler burada da görünür olmalı; aksi
-        # halde temsilci eksik bilgiye dayanarak hareket eder.
+        # Attachments the sender could not deliver must be visible here too,
+        # otherwise the agent acts on incomplete information.
         skipped = [str(name) for name in (data.get('skipped_attachments') or [])]
         if skipped:
             body += Markup('<p><em>%s</em></p>') % _(

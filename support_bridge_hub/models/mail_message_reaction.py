@@ -12,7 +12,7 @@ class MailMessageReaction(models.Model):
         return reactions
 
     def unlink(self):
-        # Silmeden önce yakala — super() sonrası kayıtlar artık yok.
+        # Capture before deleting: after super() the records are gone.
         events = self._support_bridge_events()
         res = super().unlink()
         for customer, project, payload in events:
@@ -20,11 +20,10 @@ class MailMessageReaction(models.Model):
         return res
 
     def _support_bridge_events(self):
-        """Bu taraftaki kendi kullanıcılarımızın, köprülenmiş kanal mesajlarına
-        verdiği tepkiler için [(customer, project, payload)] döner. Köprünün
-        kendi uyguladığı tepkiler (müşteri temsil kontağı veya onun kişi
-        kontakları adına olanlar) dışarıda bırakılır; böylece dışarıdan gelen
-        bir tepki asla geri yansıtılmaz."""
+        """Return [(customer, project, payload)] for reactions our own users put
+        on bridged messages. Reactions the bridge itself applied -- those made
+        as the customer persona or a contact under it -- are left out, so an
+        incoming reaction is never echoed back."""
         result = []
         channel_reactions = self.filtered(
             lambda r: r.partner_id and r.message_id.model == 'discuss.channel')

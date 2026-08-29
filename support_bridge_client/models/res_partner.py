@@ -7,8 +7,7 @@ class ResPartner(models.Model):
     support_bridge_client_remote_id = fields.Integer(
         string='Support Bridge Remote Contact',
         copy=False,
-        # Kayıtların ezici çoğunluğunda boş kalacağı için yalnızca dolu
-        # satırlar indekslenir.
+        # Empty on almost every contact, so only non-null rows are indexed.
         index='btree_not_null',
         help="Which person on the vendor's side this auto-created contact "
              "mirrors. Contacts are matched on this id — never on the name, "

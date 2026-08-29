@@ -5,22 +5,21 @@ from odoo import api, fields, models
 
 _logger = logging.getLogger(__name__)
 
-# Geçici hatalarda deneme aralığı kademeli olarak açılır; son değer tavandır
-# ve pencere dolana kadar o aralıkla sürer. Sabit 5 dakika, günlerce kapalı
-# kalan bir sunucuya 30 günde ~8600 istek atardı — bu hem boşuna yük, hem de
-# toparlanmaya çalışan sunucuyu döven bir davranış olurdu.
+# On transient failures the interval widens step by step; the last value is
+# the ceiling and holds until the window closes. A flat 5 minutes would throw
+# ~8600 requests in 30 days at a server that is down -- wasted load, and a
+# beating for a server trying to come back up.
 RETRY_BACKOFF_MINUTES = (5, 15, 45, 120, 360)
-# Bu süre boyunca denemeye devam edilir. Sunucu bir hafta kapalı kalsa bile
-# mesaj, açıldıktan en geç altı saat sonra teslim edilir.
+# How long we keep trying. Even after a week of downtime the message lands
+# within six hours of the server coming back.
 RETRY_WINDOW_DAYS = 30
-# Gönderilmiş satırlar yalnızca kayıt tutma amaçlıdır ("sunucuya ulaştı mı?")
-# — sohbet mesajlarının kendisi mail.message'ta durur ve asla silinmez.
-# Başarısız satırlar, dışarı çıkamayan mesajların kanıtı olarak kalıcı tutulur.
+# Sent rows are bookkeeping only ("did it reach the vendor?") -- the chat
+# messages themselves live in mail.message and are never deleted. Failed rows
+# are kept indefinitely as evidence of what could not get out.
 SENT_RETENTION_DAYS = 30
-# Yeni oluşturulan satırlar commit sonrası arka plan thread'i tarafından
-# gönderilir; cron yalnızca thread'in açıkça hiç çalışmadığı kadar eski
-# bekleyen satırları alır (arada sunucu yeniden başlamıştır) — böylece iki yol
-# aynı mesajı iki kez göndermez.
+# New rows are sent by the post-commit background thread. The cron only
+# picks up pending rows old enough that the thread plainly never ran (the
+# server restarted in between), so the two paths never send the same message.
 PENDING_GRACE_MINUTES = 5
 
 
@@ -34,9 +33,9 @@ class SupportBridgeOutbox(models.Model):
     # bayi jetonu yenilerse kuyrukta bekleyen satirlar da yeni jetonla gitsin.
     project_id = fields.Many2one('support.bridge.project', required=True, ondelete='cascade', index=True)
     message_id = fields.Many2one('mail.message', ondelete='set null')
-    # Karşı tarafın kontağı bu id ile eşleştirir; ad ve e-posta yalnızca
-    # görünen bilgidir. message_id silinebildiği için yazar bilgisi burada
-    # ayrıca saklanır.
+    # The far side matches its contact on this id; name and email are display
+    # only. Author details are stored here as well because message_id can be
+    # cleared when the message goes away.
     author_partner_id = fields.Many2one('res.partner', ondelete='set null')
     author_name = fields.Char()
     author_email = fields.Char()
@@ -46,18 +45,18 @@ class SupportBridgeOutbox(models.Model):
         default='pending', required=True,
     )
     attempts = fields.Integer(default=0)
-    # Boş olması "bir daha denenmeyecek" demektir: ya sunucu içeriği kalıcı
-    # olarak reddetti (4xx), ya da yeniden deneme penceresi doldu. Boş bir
-    # tarih, cron'un domain'inde hiçbir zaman eşleşmez.
+    # Empty means "never again": either the vendor rejected the content for
+    # good (4xx), or the retry window closed. An empty datetime never matches
+    # the cron's domain, which is how that state is expressed.
     next_retry = fields.Datetime(string='Next Retry', copy=False, index='btree_not_null')
     last_error = fields.Text()
 
     def _try_send(self):
         self.ensure_one()
         connection = self.connection_id
-        # Ekler, giden kuyruk satırına kopyalanmaz; gönderim anında kaynak
-        # mesajdan okunur — böylece kesinti sonrası yeniden denemede de
-        # eklere erişilebilir.
+        # Attachments are not copied onto the queue row but read from the
+        # source message at send time, so a retry after an outage still has
+        # them.
         source_attachments = self.message_id.attachment_ids if self.message_id else \
             self.env['ir.attachment']
         attachments = connection._serialize_attachments(source_attachments)
@@ -78,11 +77,11 @@ class SupportBridgeOutbox(models.Model):
                         'remote_message_id': hub_message_id,
                     })
         else:
-            # 4xx, sunucunun "bu içerik hiçbir zaman kabul edilmeyecek"
-            # demesidir (hatalı anahtar, boş mesaj, ...) — yeniden denemek
-            # fayda etmez, bu yüzden satır tek seferde bırakılır. Diğer her şey
-            # (ağ kesintisi, 5xx, zaman aşımı) geçici sayılır ve pencere dolana
-            # kadar giderek seyrekleşen aralıklarla denenmeye devam eder.
+            # A 4xx is the vendor saying "this content will never be
+            # accepted" (wrong key, empty message, ...), so retrying is
+            # pointless and the row is dropped at once. Everything else
+            # (network outage, 5xx, timeout) counts as transient and keeps
+            # retrying on a widening interval until the window closes.
             attempts = self.attempts + 1
             self.write({
                 'state': 'failed',
@@ -92,7 +91,7 @@ class SupportBridgeOutbox(models.Model):
             })
 
     def _next_retry_at(self, attempts, permanent):
-        """Bir sonraki deneme zamanı; artık denenmeyecekse False."""
+        """When to try next, or False if there will be no next time."""
         self.ensure_one()
         if permanent:
             return False
@@ -106,8 +105,8 @@ class SupportBridgeOutbox(models.Model):
     def _cron_retry_failed(self):
         now = fields.Datetime.now()
         pending_cutoff = now - timedelta(minutes=PENDING_GRACE_MINUTES)
-        # next_retry boş olan satırlar bu karşılaştırmada hiçbir zaman
-        # eşleşmez; "bir daha denenmeyecek" durumu böyle ifade edilir.
+        # Rows with an empty next_retry never match this comparison, which
+        # is how "never again" is expressed.
         outbox_rows = self.search([
             '|',
             '&', ('state', '=', 'failed'), ('next_retry', '<=', now),
@@ -117,7 +116,7 @@ class SupportBridgeOutbox(models.Model):
             try:
                 row._try_send()
             except Exception:
-                _logger.exception('support_bridge_client: giden kuyruk satırı %s yeniden denenirken beklenmeyen hata', row.id)
+                _logger.exception('support_bridge_client: unexpected error retrying outbox row %s', row.id)
 
     @api.autovacuum
     def _gc_sent_rows(self):

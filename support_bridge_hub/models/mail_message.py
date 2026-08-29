@@ -16,12 +16,12 @@ class MailMessage(models.Model):
             lambda m: m.model == 'discuss.channel' and m.message_type == 'comment')
         if not channel_messages:
             return
-        # Yönlendirme artık müşteriye değil projeye göre: bir müşterinin birden
-        # çok projesi olabilir ve her birinin kendi alt kanalı vardır.
+        # Routing is per project, not per customer: one customer can run
+        # several projects and each has its own sub-channel.
         project_by_channel = self.env['project.project']._find_bridged_by_channel(
             channel_messages.mapped('res_id'))
-        # Paylaşımı durdurulmuş projelerin kanalı yerinde kalır. Oraya yazan
-        # temsilci, mesajının gittiğini sanmamalı.
+        # A project that stopped being shared keeps its channel. An agent
+        # writing there must not be left thinking the message went out.
         stale_by_channel = self.env['project.project']._find_unshared_by_channel(
             set(channel_messages.mapped('res_id')) - set(project_by_channel))
         for message in channel_messages:
@@ -40,18 +40,17 @@ class MailMessage(models.Model):
                 continue
             customer._enqueue_event('message', {
                 'message_id': message.id,
-                # Kimlik anahtarı partner id'sidir; ad ve e-posta yalnızca
-                # görünen bilgidir. display_name değil name gönderilir:
-                # display_name yazarın kendi şirket önekini taşır
-                # ("YourCompany, Ali") ve karşı tarafta bu önek kontak adının
-                # içine gömülüp iç içe geçmiş bir ada yol açar.
+                # Identity is the partner id; name and email are display
+                # only. We send name, not display_name: display_name carries
+                # the author's own company prefix ("YourCompany, Ali"), which
+                # the far side would bake into the contact name and nest again.
                 'author_id': message.author_id.id,
                 'author_name': message.author_id.name or message.email_from or '',
                 'author_email': message.author_id.email or message.email_from or '',
                 'body': body,
                 'create_date': message.create_date.isoformat() if message.create_date else '',
             }, project)
-            # Sınırı aşan ekler iletilmez; temsilcinin bunu bilmesi gerekir.
+            # Oversized attachments are not delivered; the agent must know.
             skipped = customer._partition_attachments(message.attachment_ids)[1]
             if skipped:
                 customer._warn_skipped_attachments(
