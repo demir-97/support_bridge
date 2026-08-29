@@ -7,7 +7,6 @@
         <field name="arch" type="xml">
             <list>
                 <field name="name"/>
-                <field name="agent_user_ids" widget="many2many_tags"/>
                 <field name="last_seen"/>
                 <field name="active" widget="boolean_toggle"/>
             </list>
@@ -35,8 +34,7 @@
                             <field name="api_key"/>
                             <field name="active" widget="boolean_toggle"/>
                         </group>
-                        <group string="Team">
-                            <field name="agent_user_ids" widget="many2many_tags"/>
+                        <group string="Status">
                             <field name="last_seen"/>
                         </group>
                     </group>

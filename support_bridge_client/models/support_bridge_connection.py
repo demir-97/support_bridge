@@ -420,6 +420,11 @@ class SupportBridgeConnection(models.Model):
             self._deliver_message(item)
         elif event_type in ('reaction_add', 'reaction_remove'):
             self._deliver_reaction(item, 'add' if event_type == 'reaction_add' else 'remove')
+        elif event_type == 'project_sync':
+            # Bayi proje açtığında/kapattığında liste kendiliğinden gelir;
+            # kullanıcının tekrar Connect'e basması gerekmez. Tam liste
+            # taşındığı için tekrar işlenmesi de zararsızdır.
+            self.env['support.bridge.project']._sync_from_hub(self, item.get('projects'))
         if advance_cursor and event_id > self.last_poll_cursor:
             self.write({'last_poll_cursor': event_id, 'last_synced': fields.Datetime.now()})
 

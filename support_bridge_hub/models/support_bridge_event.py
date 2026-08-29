@@ -17,13 +17,15 @@ class SupportBridgeEvent(models.Model):
         'support.bridge.customer', required=True, ondelete='cascade', index=True)
     # Olayın ait olduğu proje; karşı taraf hangi alt kanala yazacağını buradan
     # türeyen jetondan bulur. Proje silinirse olayın teslim edilecek bir yeri
-    # kalmaz, o yüzden satır da gider.
+    # kalmaz, o yüzden satır da gider. 'project_sync' olayları tek bir projeye
+    # ait olmadığı için burası boş kalabilir.
     project_id = fields.Many2one(
-        'project.project', required=True, ondelete='cascade', index=True)
+        'project.project', ondelete='cascade', index='btree_not_null')
     event_type = fields.Selection([
         ('message', 'Message'),
         ('reaction_add', 'Reaction Added'),
         ('reaction_remove', 'Reaction Removed'),
+        ('project_sync', 'Project List Changed'),
     ], required=True)
     payload = fields.Json()
 

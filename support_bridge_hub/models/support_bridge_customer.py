@@ -58,11 +58,6 @@ class SupportBridgeCustomer(models.Model):
              "own chat channel on both sides and its own revocable token.",
     )
     project_count = fields.Integer(compute='_compute_project_count')
-    agent_user_ids = fields.Many2many(
-        'res.users', string='Agents',
-        default=lambda self: self.env.user,
-        help="Internal users who can see and reply in this customer's support channel.",
-    )
     active = fields.Boolean(
         default=True,
         help="Archive a customer to block their access without deleting the chat history.",
@@ -84,18 +79,6 @@ class SupportBridgeCustomer(models.Model):
         for record in records:
             record._ensure_partner()
         return records
-
-    def write(self, vals):
-        # Temsilci listesi değişmeden önceki hali yakalanır; hangi kullanıcının
-        # listeden düştüğü ancak bu karşılaştırmayla bilinebilir.
-        previous = {}
-        if 'agent_user_ids' in vals:
-            previous = {record.id: record.agent_user_ids for record in self}
-        res = super().write(vals)
-        if 'agent_user_ids' in vals:
-            for record in self:
-                record._sync_channel_members(previous.get(record.id))
-        return res
 
     def _ensure_partner(self):
         """Müşterinin temsil kontağı. Kanal oluşturmaz — sohbet kanalları
@@ -144,6 +127,20 @@ class SupportBridgeCustomer(models.Model):
             'team_name': project.support_bridge_team_id.name or '',
         } for project in self.project_ids.sudo().filtered('support_bridge_token')]
 
+    def _enqueue_project_sync(self):
+        """Proje listesi değiştiğinde müşteriye haber verir.
+
+        Delta değil, listenin tamamı gönderilir: alıcı taraf zaten tam listeye
+        göre çalışıyor (yoksa oluştur, varsa güncelle, listede olmayanı
+        arşivle), bu yüzden tam liste hem sıralamadan bağımsızdır hem de
+        kaçırılan bir olay bir sonrakiyle kendiliğinden telafi olur.
+
+        Mesajlarla aynı kuyruğu kullanır; yani erişilebilir müşteriye anında
+        itilir, diğerlerinde bir dakika içinde periyodik kontrolle gelir.
+        Müşterinin tekrar Connect'e basması gerekmez."""
+        self.ensure_one()
+        return self._enqueue_event('project_sync', {'projects': self._serialize_projects()}, None)
+
     def _enqueue_event(self, event_type, payload, project):
         """Bu müşteri için bir giden olay kaydeder. Olay kuyruğu, her iki
         teslimat yolunun da okuduğu tek kaynaktır: müşterinin poll cron'u
@@ -155,7 +152,7 @@ class SupportBridgeCustomer(models.Model):
         self.ensure_one()
         event = self.env['support.bridge.event'].sudo().create({
             'customer_id': self.id,
-            'project_id': project.id,
+            'project_id': project.id if project else False,
             'event_type': event_type,
             'payload': payload,
         })
@@ -175,6 +172,10 @@ class SupportBridgeCustomer(models.Model):
         # için kuyrukta bekleyen olaylar da böylece teslim edilemez hale gelir.
         data['project_token'] = event.project_id.sudo().support_bridge_token or ''
         data['project_name'] = event.project_id.name or ''
+        if event.event_type == 'project_sync':
+            # Liste, olay kaydindaki kopya degil, o anki gercek durum olmali:
+            # kuyrukta bekleyen eski bir sync olayi da guncel listeyi tasir.
+            data['projects'] = self._serialize_projects()
         if event.event_type == 'message' and data.get('message_id'):
             message = self.env['mail.message'].sudo().browse(data['message_id']).exists()
             if message:
@@ -370,45 +371,6 @@ class SupportBridgeCustomer(models.Model):
         biriyse True döner."""
         self.ensure_one()
         return bool(partner) and (partner.id == self.partner_id.id or partner.parent_id.id == self.partner_id.id)
-
-    def _sync_channel_members(self, previous_users=None):
-        """Temsilci listesini kanal üyeliğiyle eşitler.
-
-        Kanal 'group' tipinde olduğu için erişim doğrudan üyeliğe bağlıdır —
-        listeden çıkarılan bir temsilcinin üyeliği de gerçekten kaldırılmalı,
-        aksi halde müşterinin sohbetini görmeye devam eder. Yalnızca listeden
-        düşenler çıkarılır; Discuss üzerinden elle davet edilmiş kişilere
-        dokunulmaz.
-        """
-        self.ensure_one()
-        channels = self.project_ids.sudo().support_bridge_channel_id
-        if not channels:
-            return
-        for channel in channels:
-            to_add = self.agent_user_ids.partner_id - channel.channel_member_ids.partner_id
-            if to_add:
-                channel.add_members(partner_ids=to_add.ids)
-        if previous_users is None:
-            return
-        for user in previous_users - self.agent_user_ids:
-            partner = user.partner_id
-            for channel in channels:
-                if partner in channel.channel_member_ids.partner_id:
-                    channel._action_unfollow(partner=partner, post_leave_message=False)
-            # Odoo çekirdeği, bir alt kanala eklenen herkesi otomatik olarak üst
-            # kanala da üye yapar (discuss.channel.member.create). Üst kanal
-            # üyeliği ise tek başına bütün alt kanalları okuma yetkisi verdiği
-            # için, yalnızca alt kanaldan çıkarmak erişimi kesmez. Takım grubundan
-            # çıkarmak ise ancak o takımda başka hiçbir projede temsilci
-            # olmadığında doğrudur.
-            for parent in channels.parent_channel_id:
-                if partner not in parent.channel_member_ids.partner_id:
-                    continue
-                if self.env['project.project'].sudo().search_count([
-                        ('support_bridge_channel_id.parent_channel_id', '=', parent.id),
-                        ('support_bridge_customer_id.agent_user_ids', 'in', user.id)]):
-                    continue
-                parent._action_unfollow(partner=partner, post_leave_message=False)
 
     @api.depends('project_ids')
     def _compute_project_count(self):

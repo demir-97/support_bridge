@@ -74,6 +74,7 @@ class ProjectProject(models.Model):
         channel = self.support_bridge_channel_id.sudo()
         if not channel:
             self._create_bridge_channel(parent)
+            self.support_bridge_customer_id._enqueue_project_sync()
             return
         if channel.parent_channel_id != parent:
             # Odoo, bir alt kanalın üst kanalını sonradan değiştirmeye izin
@@ -93,8 +94,11 @@ class ProjectProject(models.Model):
         name = self._bridge_channel_name()
         if channel.name != name:
             channel.name = name
+            self.support_bridge_customer_id._enqueue_project_sync()
 
     def _create_bridge_channel(self, parent):
+        """Alt kanalın üyeleri takımdan gelir — kimin göreceğinin tek kaynağı
+        helpdesk takımının üye listesidir."""
         self.ensure_one()
         self.sudo().support_bridge_channel_id = self.env['discuss.channel'].sudo().create({
             'name': self._bridge_channel_name(),
@@ -102,7 +106,7 @@ class ProjectProject(models.Model):
             'parent_channel_id': parent.id,
             'channel_member_ids': [
                 (0, 0, {'partner_id': partner.id})
-                for partner in self.support_bridge_customer_id.agent_user_ids.partner_id
+                for partner in self.support_bridge_team_id._bridge_partners()
             ],
         })
 
@@ -111,6 +115,7 @@ class ProjectProject(models.Model):
         diğer projeleri etkilenmez. Kanal ve geçmiş olduğu gibi kalır."""
         for project in self:
             project.sudo().support_bridge_token = False
+            project.support_bridge_customer_id._enqueue_project_sync()
         return True
 
     def action_support_bridge_regenerate(self):
@@ -119,6 +124,7 @@ class ProjectProject(models.Model):
                 raise UserError(_(
                     'Link this project to a Support Bridge customer first.'))
             project.sudo().support_bridge_token = secrets.token_urlsafe(24)
+            project.support_bridge_customer_id._enqueue_project_sync()
         return True
 
     @api.model
