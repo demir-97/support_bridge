@@ -17,12 +17,6 @@ MAX_ATTACHMENTS_PER_MESSAGE = 20
 
 
 def _fire_and_forget_post(url, headers, payload, timeout):
-    """İsteği daemon thread içinde gönderir; böylece kullanıcının kendi
-    transaction'ı, karşı taraf yavaş veya kapalı olduğunda beklemez. Yalnızca
-    garantili bir yedeği olan (periyodik kontrol / yeniden deneme cron'u) en
-    iyi çaba gönderimleri için kullanılır; hatalar loglanıp yutulur. Yalnızca
-    gerçekten commit edilmiş veri için tetiklenmesi adına cr.postcommit ile
-    zamanlanmalıdır."""
     def _send():
         try:
             requests.post(url, headers=headers, json=payload, timeout=timeout)
@@ -56,7 +50,6 @@ class SupportBridgeConnection(models.Model):
              "attributed to individual contacts nested under it.",
     )
     channel_id = fields.Many2one(
-        # index: her mail.message oluşturmada bu alan üzerinden arama yapılır.
         'discuss.channel', string='Support Channel', readonly=True, copy=False, index=True,
         help="The Discuss channel where you chat with your vendor's support team.",
     )
@@ -163,10 +156,6 @@ class SupportBridgeConnection(models.Model):
         if not self.channel_id:
             self.channel_id = self.env['discuss.channel'].sudo().create({
                 'name': hub_name,
-                # 'channel' tipinde Odoo'nun kayıt kuralı üyeliğe bakmadan
-                # tüm dahili kullanıcılara erişim verir; 'group' tipinde
-                # erişim yalnızca üyeliktir — böylece kanal gerçekten
-                # aşağıdaki Ekip alanıyla sınırlı kalır.
                 'channel_type': 'group',
                 'channel_member_ids': [
                     (0, 0, {'partner_id': user.partner_id.id})
@@ -183,14 +172,6 @@ class SupportBridgeConnection(models.Model):
         kontağının altında açılan kişiye özel küçük kontaklara atfedilir —
         temsil kontağının kendisine değil; böylece farklı temsilciler
         Discuss'ta kendi adlarıyla görünür.
-
-        Eşleştirme anahtarı karşı taraftaki partner id'sidir; ad yalnızca
-        görünen etikettir ve karşı tarafta değiştiğinde burada da güncellenir.
-        Ada göre eşleştirmek iki hataya yol açardı: aynı adlı iki kişi tek
-        kontağa düşer, ad değiştiren kişi ise ikinci bir kontak açtırıp
-        geçmişini bölerdi. E-posta da taşınır ama yalnızca ayırt edici bilgi
-        olarak — asla eşleştirme anahtarı değildir, çünkü değişebilir ve
-        paylaşılan kutular birden çok kişiye ait olabilir.
         """
         self.ensure_one()
         name = (name or '').strip()
@@ -211,7 +192,7 @@ class SupportBridgeConnection(models.Model):
                 if contact:
                     contact.support_bridge_client_remote_id = remote_id
         elif name:
-            # Karşı taraf henüz kimlik göndermiyor (eski sürüm) — ada düş.
+            # Karşı taraf henüz kimlik göndermiyor ise
             contact = Partner.search(
                 domain + [('name', '=', name)], limit=1)
 
@@ -275,11 +256,7 @@ class SupportBridgeConnection(models.Model):
 
     def send_reaction(self, remote_message_id, content, action, author_name=None,
                       author_id=None, author_email=None):
-        """Bir emoji tepkisini (ekleme veya kaldırma) sunucuya iletir; commit
-        sonrasında ve ayrı thread'de çalışır, böylece tepkiyi veren kullanıcı
-        ağı beklemez. En iyi çaba prensibi: ağ kesintisinde kaybolan bir tepki
-        yalnızca görsel bir kayıptır, bu yüzden mesajlardan farklı olarak
-        arkasında giden kuyruk / yeniden deneme yoktur."""
+        """Bir emoji tepkisini (ekleme veya kaldırma) sunucuya iletir; commit sonrasında ve ayrı thread'de çalışır."""
         self.ensure_one()
         url = self.hub_url.rstrip('/') + '/support_bridge/reaction'
         headers = self._headers()
@@ -296,12 +273,7 @@ class SupportBridgeConnection(models.Model):
 
     @api.model
     def _partition_attachments(self, attachments):
-        """(iletilecek ekler, iletilemeyeceklerin etiketleri).
-
-        Boyut ve adet sınırlarının tek kaynağı burasıdır. Yalnızca meta veriye
-        bakar, ek içeriğini okumaz — bu sayede yalnızca "ne atlanacak?"
-        sorusunu cevaplamak için çağrılması ucuzdur.
-        """
+        """İletilecek ekler, iletilemeyeceklerin etiketleri"""
         keep = self.env['ir.attachment']
         skipped = []
         for attachment in attachments:
@@ -316,8 +288,7 @@ class SupportBridgeConnection(models.Model):
 
     @api.model
     def _serialize_attachments(self, attachments):
-        """ir.attachment kayıtlarını ağ biçimine çevirir
-        (name/mimetype/base64 datas)."""
+        """ir.attachment kayıtlarını ağ biçimine çevirir (name/mimetype/base64 datas)."""
         keep, _skipped = self._partition_attachments(attachments)
         result = []
         for attachment in keep:

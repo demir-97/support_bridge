@@ -61,8 +61,7 @@ class MailMessage(models.Model):
             outbox = self.env['support.bridge.outbox'].sudo().create({
                 'connection_id': connection.id,
                 'message_id': message.id,
-                # Kimlik anahtarı partner id'sidir; ad ve e-posta yalnızca
-                # görünen bilgidir.
+                # Kimlik anahtarı partner id'sidir; ad ve e-posta yalnızca görünen bilgidir.
                 'author_partner_id': message.author_id.id,
                 'author_name': message.author_id.name or message.email_from or '',
                 'author_email': message.author_id.email or message.email_from or '',
