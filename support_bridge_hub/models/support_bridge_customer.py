@@ -122,6 +122,11 @@ class SupportBridgeCustomer(models.Model):
         hangi ekiple konuşulduğunu belli eder."""
         self.ensure_one()
         return [{
+            # Kimlik projenin buradaki id'sidir, jeton değil. Jeton bir
+            # paroladır ve yenilenebilir; onu kimlik olarak kullanmak, her
+            # yenilemede karşı tarafta ikinci bir kayıt ve ikinci bir kanal
+            # açtırıp geçmişi ikiye böler.
+            'remote_id': project.id,
             'token': project.support_bridge_token,
             'name': project.name or '',
             'team_name': project.support_bridge_team_id.name or '',

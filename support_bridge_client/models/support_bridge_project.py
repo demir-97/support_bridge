@@ -15,10 +15,17 @@ class SupportBridgeProject(models.Model):
 
     connection_id = fields.Many2one(
         'support.bridge.connection', required=True, ondelete='cascade', index=True)
+    remote_id = fields.Integer(
+        string='Vendor Project Id', required=True, readonly=True, copy=False, index=True,
+        help="The project's own id on the vendor's side. Records are matched on "
+             "this, never on the token: a token is a password and can be "
+             "rotated, and matching on it would fork the conversation.",
+    )
     token = fields.Char(
-        required=True, readonly=True, copy=False, index=True,
+        required=True, readonly=True, copy=False,
         groups='base.group_system',
-        help="Identifies this project to the vendor's server. Issued by them.",
+        help="Credential proving which project a message belongs to. Issued by "
+             "the vendor and replaced whenever they rotate it.",
     )
     name = fields.Char(string='Project', readonly=True)
     team_name = fields.Char(
@@ -37,7 +44,7 @@ class SupportBridgeProject(models.Model):
              "and its history stay, but no new messages travel either way.",
     )
 
-    _token_unique = models.UniqueIndex("(connection_id, token)")
+    _remote_unique = models.UniqueIndex("(connection_id, remote_id)")
 
     def _ensure_channel(self):
         """Projenin alt kanalı; bayi grubunun altına asılır."""
@@ -65,29 +72,33 @@ class SupportBridgeProject(models.Model):
         Project = self.sudo()
         # active_test=False şart: arşivlenmiş bir proje bayi tarafından yeniden
         # paylaşıldığında bulunamazsa kopya oluşur ve tekil indekse takılır.
-        existing = {p.token: p for p in Project.with_context(active_test=False).search(
-            [('connection_id', '=', connection.id)]) if p.token}
+        existing = {p.remote_id: p for p in Project.with_context(active_test=False).search(
+            [('connection_id', '=', connection.id)]) if p.remote_id}
         seen = set()
         for item in items or []:
+            remote_id = item.get('remote_id') or 0
             token = (item.get('token') or '').strip()
-            if not token:
+            if not remote_id or not token:
                 continue
-            seen.add(token)
+            seen.add(remote_id)
             values = {
                 'name': item.get('name') or '',
                 'team_name': item.get('team_name') or '',
+                # Jeton her eşitlemede tazelenir; bayi yenilediğinde kayıt
+                # aynı kalır, yalnızca parolası değişir.
+                'token': token,
                 'active': True,
             }
-            project = existing.get(token)
+            project = existing.get(remote_id)
             if project:
                 project.write(values)
             else:
                 project = Project.create(dict(
-                    values, connection_id=connection.id, token=token))
+                    values, connection_id=connection.id, remote_id=remote_id))
             project._ensure_channel()
             if project.channel_id and project.channel_id.name != project.name:
                 project.channel_id.sudo().name = project.name
-        stale = [p for token, p in existing.items() if token not in seen and p.active]
+        stale = [p for remote_id, p in existing.items() if remote_id not in seen and p.active]
         for project in stale:
             project.active = False
             # Kanal yerinde kaldığı için, haber verilmezse kullanıcı buraya
