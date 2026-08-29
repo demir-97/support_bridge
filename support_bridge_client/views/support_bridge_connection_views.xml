@@ -68,9 +68,9 @@
 
     <menuitem id="menu_support_bridge_connection"
               name="Vendor Support"
-              parent="base.next_id_2"
+              parent="project.menu_project_config"
               action="action_support_bridge_connection"
               groups="base.group_system"
-              sequence="64"/>
+              sequence="90"/>
 
 </odoo>

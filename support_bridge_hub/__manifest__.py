@@ -6,7 +6,7 @@
     'license': 'OPL-1',
     'summary': 'Support Bridge Hub.',
     'description': """Support Bridge Hub""",
-    'depends': ['mail'],
+    'depends': ['mail', 'project'],
     'images': ['static/description/banner.png'],
     'data': [
         'security/ir.model.access.csv',

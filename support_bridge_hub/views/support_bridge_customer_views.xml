@@ -63,9 +63,9 @@
 
     <menuitem id="menu_support_bridge_customer_root"
               name="Support Hub"
-              parent="base.next_id_2"
+              parent="project.menu_project_config"
               groups="base.group_system"
-              sequence="63"/>
+              sequence="90"/>
 
     <menuitem id="menu_support_bridge_customer"
               name="Customer Connections"
