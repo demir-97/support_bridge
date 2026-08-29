@@ -50,6 +50,7 @@ class ProjectProject(models.Model):
         if {'name', 'support_bridge_customer_id'} & set(vals):
             for project in self.filtered('support_bridge_shared'):
                 project._sync_support_bridge()
+                project.support_bridge_customer_id._enqueue_project_sync()
         return res
 
     def _bridge_channel_name(self):
@@ -64,7 +65,12 @@ class ProjectProject(models.Model):
         return '%s — %s' % (customer.name, self.name or _('Project'))
 
     def _sync_support_bridge(self):
-        """Köprüye bağlı proje için jetonu, kanalı ve adı güncel tutar."""
+        """Jetonu, kanalı ve kanal adını güncel tutar.
+
+        Müşteriye haber vermek bu fonksiyonun işi DEĞİLDİR. Haber, paylaşımı
+        başlatan/durduran eylemin kendisinden gider; buraya bağlansaydı
+        "kanal zaten var ve adı da aynı" durumunda hiçbir şey gönderilmez ve
+        tekrar paylaşım karşı tarafa hiç yansımazdı."""
         self.ensure_one()
         if not self.support_bridge_customer_id or not self.support_bridge_team_id:
             return
@@ -74,7 +80,6 @@ class ProjectProject(models.Model):
         channel = self.support_bridge_channel_id.sudo()
         if not channel:
             self._create_bridge_channel(parent)
-            self.support_bridge_customer_id._enqueue_project_sync()
             return
         if channel.parent_channel_id != parent:
             # Odoo, bir alt kanalın üst kanalını sonradan değiştirmeye izin
@@ -94,7 +99,6 @@ class ProjectProject(models.Model):
         name = self._bridge_channel_name()
         if channel.name != name:
             channel.name = name
-            self.support_bridge_customer_id._enqueue_project_sync()
 
     def _create_bridge_channel(self, parent):
         """Alt kanalın üyeleri takımdan gelir — kimin göreceğinin tek kaynağı
@@ -128,6 +132,10 @@ class ProjectProject(models.Model):
                     "the customer first.", project.support_bridge_customer_id.name))
             project.sudo().support_bridge_shared = True
             project._sync_support_bridge()
+            # Her paylasimda gonderilir: ilk paylasimda da, durdurulmus bir
+            # projenin tekrar paylasilmasinda da. Kanal zaten duruyor olabilir,
+            # bu haber vermemenin gerekcesi degil.
+            project.support_bridge_customer_id._enqueue_project_sync()
         return True
 
     def action_support_bridge_revoke(self):

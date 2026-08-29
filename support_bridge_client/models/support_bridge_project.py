@@ -91,7 +91,15 @@ class SupportBridgeProject(models.Model):
             }
             project = existing.get(remote_id)
             if project:
+                yeniden_acildi = not project.active
                 project.write(values)
+                if yeniden_acildi:
+                    # Durdurulduğunda haber verdik; tekrar başladığında da
+                    # vermeliyiz, yoksa kanal sessizce canlanır.
+                    project._post_notice(_(
+                        "%s is sharing this project again. Messages written "
+                        "here are delivered from now on.",
+                        connection.partner_id.name or _('Your vendor')))
             else:
                 project = Project.create(dict(
                     values, connection_id=connection.id, remote_id=remote_id))
