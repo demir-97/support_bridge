@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="view_project_form_support_bridge" model="ir.ui.view">
+        <field name="name">project.project.form.support.bridge</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="project.edit_project"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="Support Bridge" name="support_bridge"
+                      groups="base.group_system">
+                    <group>
+                        <group string="Customer Conversation">
+                            <field name="support_bridge_customer_id"
+                                   options="{'no_create': True}"/>
+                            <field name="support_bridge_team_id"
+                                   options="{'no_create_edit': True}"
+                                   required="support_bridge_customer_id"/>
+                            <field name="support_bridge_channel_id" readonly="1"
+                                   invisible="not support_bridge_channel_id"/>
+                        </group>
+                        <group string="Access">
+                            <field name="support_bridge_token" readonly="1"
+                                   password="True"
+                                   invisible="not support_bridge_token"/>
+                            <div colspan="2" invisible="not support_bridge_customer_id">
+                                <button name="action_support_bridge_regenerate"
+                                        type="object" class="btn-secondary"
+                                        string="Regenerate Token"
+                                        confirm="The customer will stop receiving this project's messages until you give them the new token. Continue?"/>
+                                <button name="action_support_bridge_revoke"
+                                        type="object" class="btn-link text-danger"
+                                        string="Revoke"
+                                        invisible="not support_bridge_token"
+                                        confirm="This project's conversation stops immediately. The customer's other projects and their connection are unaffected. Continue?"/>
+                            </div>
+                        </group>
+                    </group>
+                    <div class="text-muted" invisible="support_bridge_customer_id">
+                        Link this project to a connected customer to open a
+                        dedicated chat channel for it on both sides.
+                    </div>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
