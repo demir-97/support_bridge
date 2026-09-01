@@ -9,15 +9,15 @@ class HelpdeskTeam(models.Model):
         readonly=True, copy=False, index='btree_not_null',
         help="The Discuss group that holds this team's customer conversations. "
              "Each bridged project appears as a sub-channel under it, and the "
-             "team's members are exactly who can see them.",
+             "team's followers are exactly who can see them.",
     )
 
     def _bridge_partners(self):
-        """Who can see the channels: the team's members, and nothing else.
+        """Who can see the channels: the team's followers, and nothing else.
         A second list of agents would eventually drift from this one, and then
         it is anyone's guess which of the two actually grants access."""
         self.ensure_one()
-        return self.member_ids.partner_id
+        return self.message_partner_ids
 
     def _get_or_create_bridge_channel(self):
         """The team's group channel; project sub-channels hang under it.
@@ -38,19 +38,31 @@ class HelpdeskTeam(models.Model):
         return channel
 
     def write(self, vals):
-        previous = {}
-        if 'member_ids' in vals:
-            previous = {team.id: team.member_ids for team in self}
         res = super().write(vals)
-        for team in self.filtered('support_bridge_channel_id'):
-            if 'name' in vals:
+        if 'name' in vals:
+            for team in self.filtered('support_bridge_channel_id'):
                 team.support_bridge_channel_id.sudo().name = team.name
-            if 'member_ids' in vals:
-                team._sync_bridge_members(previous.get(team.id))
         return res
 
-    def _sync_bridge_members(self, previous_members=None):
-        """Mirror team membership onto the group and every project sub-channel.
+    # Followers are the source of access, and they change through subscribe /
+    # unsubscribe rather than through write -- the message_partner_ids field on
+    # the form is computed and its inverse routes here too. So these two are
+    # the only reliable hooks.
+    def message_subscribe(self, partner_ids=None, subtype_ids=None):
+        res = super().message_subscribe(partner_ids=partner_ids, subtype_ids=subtype_ids)
+        for team in self.filtered('support_bridge_channel_id'):
+            team._sync_bridge_members()
+        return res
+
+    def message_unsubscribe(self, partner_ids=None):
+        previous = {team.id: team.message_partner_ids for team in self}
+        res = super().message_unsubscribe(partner_ids=partner_ids)
+        for team in self.filtered('support_bridge_channel_id'):
+            team._sync_bridge_members(previous.get(team.id))
+        return res
+
+    def _sync_bridge_members(self, previous_partners=None):
+        """Mirror the followers onto the group and every project sub-channel.
 
         Removal has to happen in both places: Odoo adds anyone joining a
         sub-channel to the parent as well, and parent membership on its own
@@ -67,9 +79,9 @@ class HelpdeskTeam(models.Model):
             missing = partners - channel.channel_member_ids.partner_id
             if missing:
                 channel.add_members(partner_ids=missing.ids)
-        if previous_members is None:
+        if previous_partners is None:
             return
-        for partner in (previous_members - self.member_ids).partner_id:
+        for partner in previous_partners - partners:
             for channel in subs | group:
                 if partner in channel.channel_member_ids.partner_id:
                     channel._action_unfollow(partner=partner, post_leave_message=False)
